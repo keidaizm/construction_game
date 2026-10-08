@@ -1,0 +1,2096 @@
+:root {
+  /* 画面サイズに合わせた基準単位。10 インチ横画面（約 1280×800）で 8px 前後 */
+  --u: min(1vh, 0.62vw);
+  --panel-bg: rgba(255, 255, 255, 0.55);
+  --panel-border: rgba(0, 0, 0, 0.18);
+  --ink: #2b2b2b;
+  font-family: system-ui, -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #bfdcf2;
+  /* タッチでスクロール・拡大・テキスト選択が起きないようにする */
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  position: fixed;
+  inset: 0;
+}
+
+.game-canvas {
+  position: absolute !important;
+  inset: 0;
+}
+
+/* ---------- 操作パネル ---------- */
+
+.controls-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: max(env(safe-area-inset-top), calc(var(--u) * 2)) max(env(safe-area-inset-right), calc(var(--u) * 2))
+    max(env(safe-area-inset-bottom), calc(var(--u) * 2)) max(env(safe-area-inset-left), calc(var(--u) * 2));
+}
+
+.drive-zone {
+  position: absolute;
+  left: max(env(safe-area-inset-left), calc(var(--u) * 2));
+  bottom: max(env(safe-area-inset-bottom), calc(var(--u) * 2));
+  pointer-events: auto;
+}
+
+.work-zone {
+  position: absolute;
+  right: max(env(safe-area-inset-right), calc(var(--u) * 2));
+  bottom: max(env(safe-area-inset-bottom), calc(var(--u) * 2));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: calc(var(--u) * 1.5);
+  pointer-events: auto;
+}
+
+.work-zone__levers {
+  display: flex;
+  gap: calc(var(--u) * 1.5);
+}
+
+.pictogram {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* ---------- ジョイスティック ---------- */
+
+.joystick {
+  /* ベースの周りの余白もタッチ領域 */
+  padding: calc(var(--u) * 3);
+  touch-action: none;
+}
+
+.joystick__base {
+  position: relative;
+  width: calc(var(--u) * 32);
+  height: calc(var(--u) * 32);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, var(--panel-bg) 70%);
+  border: calc(var(--u) * 0.5) solid var(--panel-border);
+  box-shadow: 0 calc(var(--u) * 0.6) calc(var(--u) * 2) rgba(0, 0, 0, 0.2);
+}
+
+.joystick__arrow {
+  position: absolute;
+  font-size: calc(var(--u) * 4);
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.45);
+  transform: translate(-50%, -50%);
+}
+.joystick__arrow--up {
+  left: 50%;
+  top: 11%;
+}
+.joystick__arrow--down {
+  left: 50%;
+  top: 89%;
+}
+.joystick__arrow--left {
+  left: 11%;
+  top: 50%;
+}
+.joystick__arrow--right {
+  left: 89%;
+  top: 50%;
+}
+
+.joystick__knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--u) * 14);
+  height: calc(var(--u) * 14);
+  padding: calc(var(--u) * 1.5);
+  border-radius: 50%;
+  background: linear-gradient(#fdfdfd, #d9d9d9);
+  border: calc(var(--u) * 0.5) solid #555;
+  box-shadow: 0 calc(var(--u) * 0.8) calc(var(--u) * 1.6) rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+}
+
+.joystick.is-active .joystick__knob {
+  border-color: #f2b705;
+}
+
+/* ---------- レバー ---------- */
+
+.lever {
+  --accent: #888;
+  display: flex;
+  align-items: center;
+  border-radius: calc(var(--u) * 2.5);
+  background: var(--panel-bg);
+  border: calc(var(--u) * 0.4) solid var(--panel-border);
+  box-shadow: 0 calc(var(--u) * 0.6) calc(var(--u) * 2) rgba(0, 0, 0, 0.18);
+  touch-action: none;
+  transition: border-color 120ms;
+}
+
+.lever.is-active {
+  border-color: var(--accent);
+}
+
+.lever--vertical {
+  flex-direction: column;
+  width: calc(var(--u) * 12);
+  padding: calc(var(--u) * 1) 0;
+}
+
+.lever--horizontal {
+  flex-direction: row;
+  height: calc(var(--u) * 11);
+  padding: 0 calc(var(--u) * 1);
+}
+
+.lever__icon {
+  flex: none;
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+}
+
+.lever__track {
+  position: relative;
+  flex: none;
+}
+
+.lever--vertical .lever__track {
+  width: 100%;
+  height: calc(var(--u) * 27);
+}
+
+.lever--horizontal .lever__track {
+  flex: 1;
+  height: 100%;
+  min-width: calc(var(--u) * 16);
+}
+
+.lever__groove {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+}
+
+.lever--vertical .lever__groove {
+  left: 50%;
+  top: calc(var(--u) * 2);
+  bottom: calc(var(--u) * 2);
+  width: calc(var(--u) * 1.4);
+  transform: translateX(-50%);
+}
+
+.lever--horizontal .lever__groove {
+  top: 50%;
+  left: calc(var(--u) * 2);
+  right: calc(var(--u) * 2);
+  height: calc(var(--u) * 1.4);
+  transform: translateY(-50%);
+}
+
+.lever__knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffffaa 0%, transparent 45%), var(--accent);
+  border: calc(var(--u) * 0.5) solid rgba(0, 0, 0, 0.45);
+  box-shadow: 0 calc(var(--u) * 0.8) calc(var(--u) * 1.6) rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+}
+
+/* ---------- 上部のボタン ---------- */
+
+.top-bar {
+  position: absolute;
+  top: max(env(safe-area-inset-top), calc(var(--u) * 2));
+  left: max(env(safe-area-inset-left), calc(var(--u) * 2));
+  display: flex;
+  gap: calc(var(--u) * 1.5);
+}
+
+/* 右上、のりかえボタンの左：昼夜とライト（ミッションの札と重ならないように） */
+.sky-bar {
+  position: absolute;
+  top: max(env(safe-area-inset-top), calc(var(--u) * 2));
+  right: calc(max(env(safe-area-inset-right), calc(var(--u) * 2)) + var(--u) * 17);
+  display: flex;
+  gap: calc(var(--u) * 1.5);
+}
+
+.round-button {
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+  padding: calc(var(--u) * 1.6);
+  border-radius: 50%;
+  border: calc(var(--u) * 0.4) solid var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 calc(var(--u) * 0.5) calc(var(--u) * 1.5) rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.round-button:active {
+  transform: scale(0.94);
+}
+
+/* 点いているライトのボタン */
+.round-button.is-on {
+  background: #fff3b0;
+  border-color: #f2b705;
+  box-shadow: 0 0 calc(var(--u) * 2.5) rgba(255, 210, 60, 0.8);
+}
+
+/* 図鑑の「夕焼けだけ」「夜だけ」の印 */
+.zukan__time {
+  position: absolute;
+  top: calc(var(--u) * 0.6);
+  right: calc(var(--u) * 0.6);
+  width: calc(var(--u) * 4);
+  height: calc(var(--u) * 4);
+  padding: calc(var(--u) * 0.5);
+  border-radius: 50%;
+  background: #1d2a52;
+}
+
+.zukan__time.is-boulder,
+.zukan__time.is-snow,
+.zukan__time.is-forest,
+.zukan__time.is-desert,
+.zukan__time.is-rocky {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff4c2;
+  font-size: calc(var(--u) * 2.2);
+  line-height: 1;
+}
+
+.zukan__time.is-dusk {
+  background: #f6c79b;
+}
+
+.fps-meter {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font: 12px/1.4 monospace;
+  pointer-events: none;
+}
+
+/* ---------- 縦持ちのとき ---------- */
+
+.rotate-notice {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .rotate-notice {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgba(40, 40, 40, 0.85);
+    color: #fff;
+    font-size: 32px;
+    font-weight: bold;
+  }
+  .rotate-notice__icon {
+    font-size: 72px;
+  }
+}
+
+/* ---------- 乗り換えボタン（右上） ---------- */
+
+.switch-button {
+  position: absolute;
+  top: max(env(safe-area-inset-top), calc(var(--u) * 2));
+  right: max(env(safe-area-inset-right), calc(var(--u) * 2));
+  width: calc(var(--u) * 15);
+  height: calc(var(--u) * 15);
+  padding: calc(var(--u) * 1.5);
+  border-radius: calc(var(--u) * 3);
+  border: calc(var(--u) * 0.5) solid #2f80ed;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 calc(var(--u) * 0.6) calc(var(--u) * 2) rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.switch-button:active {
+  transform: scale(0.94);
+}
+
+.switch-button__badge {
+  position: absolute;
+  left: calc(var(--u) * -1.5);
+  bottom: calc(var(--u) * -1.5);
+  width: calc(var(--u) * 6);
+  height: calc(var(--u) * 6);
+}
+
+/* ---------- ミッション表示（上部中央） ---------- */
+
+.mission {
+  position: absolute;
+  top: max(env(safe-area-inset-top), calc(var(--u) * 1.5));
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 58vw;
+  padding: calc(var(--u) * 1) calc(var(--u) * 2.5);
+  border-radius: calc(var(--u) * 2.5);
+  background: rgba(255, 255, 255, 0.82);
+  border: calc(var(--u) * 0.4) solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 calc(var(--u) * 0.5) calc(var(--u) * 1.5) rgba(0, 0, 0, 0.18);
+  text-align: center;
+  pointer-events: none;
+}
+
+/* 左に「あと ◯こ」、右にお題（上のまん中をとりすぎないように横に並べる） */
+.mission--row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.8);
+  padding-left: calc(var(--u) * 1.2);
+}
+
+.mission__side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(var(--u) * 9);
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 1);
+  border-radius: calc(var(--u) * 2);
+  background: #fff4f2;
+  border: calc(var(--u) * 0.35) solid #ffc9c2;
+  line-height: 1.05;
+}
+
+.mission__side small {
+  font-size: calc(var(--u) * 2.4);
+  font-weight: bold;
+  color: #555;
+}
+
+.mission__side b {
+  font-size: calc(var(--u) * 6);
+  color: #e53935;
+}
+
+.mission__side.is-over {
+  background: #ffe3e0;
+  border-color: #e53935;
+  animation: over-blink 1s ease-in-out infinite alternate;
+}
+
+.mission__side.is-done {
+  background: #e8ffe9;
+  border-color: #2fbf5b;
+}
+
+.mission__side.is-done b {
+  font-size: calc(var(--u) * 4.5);
+  color: #2fbf5b;
+}
+
+.mission__main {
+  min-width: 0;
+}
+
+/* 2 色以上のときの、色ごとのチップ（横に並べる） */
+.mission__parts {
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--u) * 2.2);
+  flex-wrap: wrap;
+}
+
+.mission__part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 0.3);
+}
+
+.mission__part-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.6);
+}
+
+.mission__part-head .rock-icon {
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 5);
+  animation: none;
+}
+
+.mission__dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--u) * 0.3);
+  max-width: calc(var(--u) * 16);
+}
+
+.mission__dot {
+  width: calc(var(--u) * 1.6);
+  height: calc(var(--u) * 1.6);
+  border-radius: 50%;
+  border: calc(var(--u) * 0.3) dashed rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.mission__dot.is-filled {
+  border-style: solid;
+  animation: rock-pop 0.35s ease-out;
+}
+
+.mission__dot.is-over {
+  background: #ff8a80;
+  border-color: #e53935;
+  border-style: solid;
+}
+
+.mission__title {
+  font-size: calc(var(--u) * 3);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.mission__title b {
+  font-size: calc(var(--u) * 4);
+  color: #e53935;
+}
+
+.mission__progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--u) * 1.5);
+}
+
+.mission__slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--u) * 0.3);
+}
+
+.mission__slots .rock-icon {
+  width: calc(var(--u) * 4.2);
+  height: calc(var(--u) * 4.2);
+}
+
+.mission__count {
+  font-size: calc(var(--u) * 3.2);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.mission__count b {
+  font-size: calc(var(--u) * 4.5);
+  color: #2f80ed;
+}
+
+.mission__equation {
+  font-size: calc(var(--u) * 4);
+  font-weight: bold;
+  color: #2b2b2b;
+  letter-spacing: 0.05em;
+}
+
+.rock-icon {
+  display: block;
+}
+
+.rock-icon--filled {
+  animation: rock-pop 0.45s ease-out;
+}
+
+@keyframes rock-pop {
+  0% {
+    transform: scale(0.3);
+  }
+  60% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- クリア画面 ---------- */
+
+.clear {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 30, 50, 0.35);
+  overflow: hidden;
+  animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.clear__confetti span {
+  position: absolute;
+  top: -5vh;
+  width: calc(var(--u) * 1.4);
+  height: calc(var(--u) * 2.4);
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes confetti-fall {
+  to {
+    top: 105vh;
+    transform: rotate(720deg) translateX(6vw);
+  }
+}
+
+.clear__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 1.5);
+  padding: calc(var(--u) * 3) calc(var(--u) * 5);
+  border-radius: calc(var(--u) * 4);
+  background: #fffdf4;
+  border: calc(var(--u) * 0.8) solid #ffd400;
+  box-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 5) rgba(0, 0, 0, 0.35);
+  animation: card-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes card-pop {
+  from {
+    transform: scale(0.4);
+  }
+}
+
+.clear__stars {
+  display: flex;
+  gap: calc(var(--u) * 2);
+  font-size: calc(var(--u) * 9);
+  line-height: 1;
+  color: #ffc400;
+  text-shadow: 0 calc(var(--u) * 0.4) 0 #e0a000;
+}
+
+.clear__stars span {
+  animation: star-pop 0.6s cubic-bezier(0.2, 1.8, 0.4, 1) backwards;
+}
+
+.clear__stars span:nth-child(2) {
+  animation-delay: 0.2s;
+  font-size: 1.25em;
+}
+
+.clear__stars span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes star-pop {
+  from {
+    transform: scale(0) rotate(-90deg);
+  }
+}
+
+.clear__title {
+  font-size: calc(var(--u) * 7);
+  font-weight: 900;
+  color: #e53935;
+  letter-spacing: 0.1em;
+}
+
+.clear__equation {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--u) * 1.5);
+}
+
+.clear__part {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--u) * 1.5);
+}
+
+.clear__op {
+  font-size: calc(var(--u) * 8);
+  font-weight: bold;
+  line-height: 1;
+  color: #555;
+}
+
+.term {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.term__num {
+  font-size: calc(var(--u) * 8);
+  font-weight: 900;
+  line-height: 1;
+  color: #2f80ed;
+}
+
+.term__dots {
+  display: grid;
+  grid-template-columns: repeat(5, calc(var(--u) * 3.8));
+  gap: calc(var(--u) * 0.3);
+  justify-content: center;
+}
+
+.term__dots .rock-icon {
+  width: calc(var(--u) * 3.8);
+  height: calc(var(--u) * 3.8);
+}
+
+.clear__next {
+  margin-top: calc(var(--u) * 1);
+  padding: calc(var(--u) * 1.5) calc(var(--u) * 6);
+  border: none;
+  border-radius: 999px;
+  background: #2fbf5b;
+  color: #fff;
+  font-size: calc(var(--u) * 5);
+  font-weight: bold;
+  box-shadow: 0 calc(var(--u) * 0.8) 0 #1f8f40;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.clear__next:active {
+  transform: translateY(calc(var(--u) * 0.6));
+  box-shadow: 0 calc(var(--u) * 0.2) 0 #1f8f40;
+}
+
+/* ---------- あと N こ・星とレベル・グレードアップ ---------- */
+
+.mission__sub {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  column-gap: calc(var(--u) * 3);
+}
+
+.mission__sub > span {
+  white-space: nowrap;
+}
+
+.mission__sub:empty {
+  display: none;
+}
+
+.mission__rest {
+  font-size: calc(var(--u) * 3.2);
+  font-weight: bold;
+  color: #555;
+}
+
+.mission__rest b {
+  font-size: calc(var(--u) * 4.5);
+  color: #e53935;
+}
+
+.progress-badge {
+  position: absolute;
+  top: calc(max(env(safe-area-inset-top), calc(var(--u) * 2)) + var(--u) * 10.5);
+  left: max(env(safe-area-inset-left), calc(var(--u) * 2));
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 1.6);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: calc(var(--u) * 0.35) solid rgba(0, 0, 0, 0.15);
+  font-size: calc(var(--u) * 2.8);
+  font-weight: bold;
+  /* 押すとレベルの一覧 */
+  cursor: pointer;
+  touch-action: manipulation;
+  font-family: inherit;
+}
+
+.progress-badge:active {
+  transform: scale(0.95);
+}
+
+.progress-badge__level {
+  padding: 0 calc(var(--u) * 1);
+  border-radius: 999px;
+  background: #2f80ed;
+  color: #fff;
+}
+
+.progress-badge__stars {
+  color: #e0a000;
+}
+
+.progress-badge__stars b {
+  font-size: calc(var(--u) * 3.4);
+}
+
+.progress-badge__stars small {
+  color: #888;
+  font-size: calc(var(--u) * 2.2);
+}
+
+.clear__star--empty {
+  color: #d8d8d8;
+  text-shadow: none !important;
+}
+
+.clear__hints {
+  display: flex;
+  gap: calc(var(--u) * 3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: calc(var(--u) * 2.6);
+  font-weight: bold;
+  color: #bbb;
+}
+
+.clear__hints .is-got {
+  color: #e0a000;
+}
+
+.levelup__title {
+  font-size: calc(var(--u) * 7);
+  font-weight: 900;
+  color: #2f80ed;
+  letter-spacing: 0.08em;
+}
+
+.levelup__badge {
+  padding: calc(var(--u) * 0.5) calc(var(--u) * 4);
+  border-radius: 999px;
+  background: linear-gradient(#ffd400, #e0a000);
+  color: #fff;
+  font-size: calc(var(--u) * 8);
+  font-weight: 900;
+  text-shadow: 0 calc(var(--u) * 0.4) 0 rgba(0, 0, 0, 0.25);
+  animation: star-pop 0.7s cubic-bezier(0.2, 1.8, 0.4, 1) backwards;
+}
+
+.levelup__text {
+  font-size: calc(var(--u) * 3.4);
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.levelup__text b {
+  font-size: calc(var(--u) * 4.5);
+  color: #e53935;
+}
+
+/* 岩の絵は 5 こずつ・10 こずつのまとまりで区切って、数えやすくする（繰り上がりの足し算の助け） */
+.mission__slots .rock-icon:nth-child(5n) {
+  margin-right: calc(var(--u) * 1.2);
+}
+
+.mission__slots .rock-icon:nth-child(10n) {
+  margin-right: calc(var(--u) * 2.4);
+}
+
+.mission__over {
+  font-size: calc(var(--u) * 3);
+  font-weight: bold;
+  color: #e53935;
+  animation: over-blink 1s ease-in-out infinite alternate;
+}
+
+.mission__over b {
+  font-size: calc(var(--u) * 4.5);
+}
+
+@keyframes over-blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+/* ---------- ダンプの速さ切り替え（カメ／ウサギ） ---------- */
+
+.gear-toggle {
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1);
+  width: calc(var(--u) * 12);
+  padding: calc(var(--u) * 1);
+  border-radius: calc(var(--u) * 2.5);
+  background: var(--panel-bg);
+  border: calc(var(--u) * 0.4) solid var(--panel-border);
+  box-shadow: 0 calc(var(--u) * 0.6) calc(var(--u) * 2) rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.gear-toggle:active {
+  transform: scale(0.96);
+}
+
+.gear-toggle__option {
+  display: block;
+  height: calc(var(--u) * 9);
+  padding: calc(var(--u) * 0.6);
+  border-radius: calc(var(--u) * 1.8);
+  opacity: 0.35;
+  filter: grayscale(1);
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.gear-toggle__option.is-on {
+  opacity: 1;
+  filter: none;
+  background: #fff6c2;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.4) #ffc400;
+}
+
+/* ---------- 地図 ---------- */
+
+.map {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 30, 50, 0.55);
+  animation: fade-in 0.2s ease-out;
+  cursor: pointer;
+}
+
+.map__svg {
+  width: min(92vh, 92vw);
+  height: min(92vh, 92vw);
+  border-radius: calc(var(--u) * 3);
+  border: calc(var(--u) * 0.8) solid #fff;
+  box-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 5) rgba(0, 0, 0, 0.4);
+  background: #e9eef3;
+}
+
+/* 地図の左上：探検した割合 */
+.map__explore {
+  position: absolute;
+  top: max(env(safe-area-inset-top), calc(var(--u) * 2));
+  left: max(env(safe-area-inset-left), calc(var(--u) * 2));
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.2);
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 2);
+  border-radius: calc(var(--u) * 5);
+  background: #fff;
+  box-shadow: 0 calc(var(--u) * 0.5) calc(var(--u) * 1.5) rgba(0, 0, 0, 0.25);
+  font-weight: bold;
+  font-size: calc(var(--u) * 2.6);
+  color: #3a3a3a;
+}
+
+.map__explore-bar {
+  position: relative;
+  width: calc(var(--u) * 18);
+  height: calc(var(--u) * 2.4);
+  border-radius: calc(var(--u) * 2);
+  background: #c9ced6;
+  overflow: hidden;
+}
+
+.map__explore-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2fbf5b, #8fd64a);
+}
+
+.map__explore-num {
+  min-width: 3em;
+  color: #2f80ed;
+}
+
+.map__close {
+  position: absolute;
+  top: max(env(safe-area-inset-top), calc(var(--u) * 2));
+  right: max(env(safe-area-inset-right), calc(var(--u) * 2));
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff;
+  font-size: calc(var(--u) * 5);
+  font-weight: bold;
+  color: #2b2b2b;
+  box-shadow: 0 calc(var(--u) * 0.5) calc(var(--u) * 1.5) rgba(0, 0, 0, 0.3);
+}
+
+.map__pulse {
+  animation: map-pulse 1.2s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes map-pulse {
+  from {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 0.4;
+    transform: scale(1.15);
+  }
+}
+
+/* 色ごとの行の先頭の岩（どの色の行か分かるように、少し大きく） */
+.mission__chip .rock-icon {
+  width: calc(var(--u) * 5.2);
+  height: calc(var(--u) * 5.2);
+  animation: none;
+}
+
+.mission__chip {
+  padding-right: calc(var(--u) * 0.6);
+  border-right: calc(var(--u) * 0.3) solid rgba(0, 0, 0, 0.15);
+}
+
+/* ジョイスティックの右に、速さの切り替え（カメ／ウサギ）を並べる */
+.drive-zone {
+  display: flex;
+  align-items: flex-end;
+  gap: calc(var(--u) * 0.5);
+}
+
+.drive-zone .gear-toggle {
+  width: calc(var(--u) * 10);
+  margin-bottom: calc(var(--u) * 3);
+}
+
+.drive-zone .tool-toggle {
+  border-color: #d64545;
+}
+
+.drive-zone .gear-toggle__option {
+  height: calc(var(--u) * 7.5);
+}
+
+/* ミッション表示は、左上のボタン（4 つ）と右上の乗り換えボタンの間に収める（はみ出す分は折り返す） */
+.mission {
+  max-width: min(58vw, calc(100vw - var(--u) * 92));
+}
+
+/* ---------- 鉱石のお知らせ・図鑑 ---------- */
+
+.gem-icon {
+  display: block;
+  width: calc(var(--u) * 8);
+  height: calc(var(--u) * 8);
+}
+
+.gem-stars {
+  color: #ffc400;
+  font-size: calc(var(--u) * 2.6);
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 0 #b08600;
+}
+
+.find-toast {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.5);
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 3);
+  border-radius: calc(var(--u) * 3);
+  background: rgba(255, 253, 244, 0.95);
+  border: calc(var(--u) * 0.5) solid #ffd400;
+  box-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 3) rgba(0, 0, 0, 0.3);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: toast-pop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes toast-pop {
+  from {
+    transform: translateX(-50%) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.find-toast__name {
+  font-size: calc(var(--u) * 3.6);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.find-toast__new {
+  margin-left: calc(var(--u) * 1);
+  padding: 0 calc(var(--u) * 1);
+  border-radius: 999px;
+  background: #e53935;
+  color: #fff;
+  font-size: calc(var(--u) * 2.4);
+  vertical-align: middle;
+}
+
+.zukan-button {
+  position: absolute;
+  top: calc(max(env(safe-area-inset-top), calc(var(--u) * 2)) + var(--u) * 17);
+  left: max(env(safe-area-inset-left), calc(var(--u) * 2));
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.5);
+  height: calc(var(--u) * 8);
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 1.6) calc(var(--u) * 0.8) calc(var(--u) * 0.8);
+  border-radius: 999px;
+  border: calc(var(--u) * 0.4) solid var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 calc(var(--u) * 0.5) calc(var(--u) * 1.5) rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.zukan-button .pictogram {
+  width: calc(var(--u) * 6.4);
+  height: calc(var(--u) * 6.4);
+}
+
+.zukan-button__count {
+  font-size: calc(var(--u) * 2.8);
+  font-weight: bold;
+  color: #2b2b2b;
+}
+
+.zukan {
+  width: min(88vw, calc(var(--u) * 110));
+  padding: calc(var(--u) * 3);
+  border-radius: calc(var(--u) * 3);
+  background: #fffdf4;
+  border: calc(var(--u) * 0.8) solid #ffd400;
+  box-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 5) rgba(0, 0, 0, 0.35);
+  /* 画面が小さいときは、カードの所だけスクロールする */
+  display: flex;
+  flex-direction: column;
+  max-height: 94vh;
+}
+
+.zukan__title {
+  font-size: calc(var(--u) * 4.5);
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: calc(var(--u) * 2);
+}
+
+.zukan__title small {
+  margin-left: calc(var(--u) * 1.5);
+  font-size: calc(var(--u) * 3);
+  color: #2f80ed;
+}
+
+.zukan__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: calc(var(--u) * 1.5);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.zukan__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--u) * 1.2);
+  border-radius: calc(var(--u) * 2);
+  background: #eeeeee;
+  opacity: 0.7;
+}
+
+.zukan__card.is-found {
+  background: #fff;
+  opacity: 1;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.3) #ffd400;
+}
+
+.zukan__name {
+  font-size: calc(var(--u) * 2.8);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.zukan__count {
+  font-size: calc(var(--u) * 2.6);
+  font-weight: bold;
+  color: #2f80ed;
+}
+
+/* 地図コンプリートのお祝い */
+.mapdone__icon {
+  font-size: calc(var(--u) * 12);
+  line-height: 1.1;
+  animation: mapdone-bounce 1.2s ease-in-out infinite;
+}
+
+.mapdone__stars {
+  margin: calc(var(--u) * 1.5) 0;
+  font-size: calc(var(--u) * 7);
+  font-weight: 900;
+  color: #ffb300;
+  text-shadow: 0 calc(var(--u) * 0.4) 0 #a06a00;
+}
+
+@keyframes mapdone-bounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(calc(var(--u) * -1.5)) rotate(4deg);
+  }
+}
+
+.zukan__tabs {
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--u) * 1.5);
+  margin-bottom: calc(var(--u) * 2);
+}
+
+.zukan__tab {
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 3);
+  border-radius: calc(var(--u) * 5);
+  border: calc(var(--u) * 0.4) solid #e6d8a8;
+  background: #f4efe0;
+  font-size: calc(var(--u) * 3.4);
+  font-weight: 900;
+  color: #6b5a3a;
+  cursor: pointer;
+}
+
+.zukan__tab small {
+  margin-left: calc(var(--u) * 0.8);
+  color: #2f80ed;
+}
+
+.zukan__tab.is-active {
+  background: #ffd400;
+  border-color: #e0b800;
+  color: #2b2b2b;
+}
+
+.zukan__grid--finds {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.find-toast__sight {
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--u) * 7);
+}
+
+.sight-icon--svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.zukan__emoji {
+  font-size: calc(var(--u) * 8);
+  line-height: 1.2;
+}
+
+.zukan__where {
+  font-size: calc(var(--u) * 2.2);
+  color: #8b7a5a;
+  text-align: center;
+}
+
+.zukan__hint {
+  margin-top: calc(var(--u) * 2);
+  text-align: center;
+  font-size: calc(var(--u) * 2.8);
+  font-weight: bold;
+  color: #8b5a2b;
+}
+
+/* ひき算で「とった数」の岩は、うすく */
+.term--removed .rock-icon {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.term--removed .term__num {
+  color: #e53935;
+}
+
+.find-toast__star {
+  font-size: calc(var(--u) * 8);
+  line-height: 1;
+  color: #ffc400;
+  text-shadow: 0 calc(var(--u) * 0.4) 0 #b08600;
+}
+
+/* 金色の石の光の柱（遠くからでも見える） */
+
+.mission__note {
+  font-size: calc(var(--u) * 2.4);
+  font-weight: bold;
+  color: #888;
+  white-space: nowrap;
+}
+
+/* ---------- クレーン ---------- */
+
+/* 近づくと出る「クレーンに のる？」（下のまん中） */
+.crane-board {
+  position: absolute;
+  left: 50%;
+  bottom: max(env(safe-area-inset-bottom), calc(var(--u) * 3));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.5);
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 3) calc(var(--u) * 1.2) calc(var(--u) * 1.5);
+  border-radius: 999px;
+  border: calc(var(--u) * 0.6) solid #f2b705;
+  background: #fffbe6;
+  box-shadow: 0 calc(var(--u) * 0.8) calc(var(--u) * 2) rgba(0, 0, 0, 0.3);
+  font-size: calc(var(--u) * 3.6);
+  font-weight: 900;
+  color: #3a2a00;
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: crane-board-pulse 1.4s ease-in-out infinite;
+}
+
+.crane-board.is-locked {
+  border-color: #b9b9b9;
+  background: #f1f1f1;
+  color: #777;
+  cursor: default;
+  animation: none;
+}
+
+@keyframes crane-board-pulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+
+.crane-board__icon {
+  position: relative;
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+}
+
+.crane-board__lock {
+  position: absolute;
+  right: calc(var(--u) * -1.5);
+  bottom: calc(var(--u) * -1);
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 5);
+}
+
+/* 旋回レバーは左下に、少し長めに */
+.crane-slew .lever--horizontal {
+  width: calc(var(--u) * 40);
+}
+
+.crane-slew .lever__track {
+  flex: 1;
+}
+
+/* つかむ／はなすボタン */
+.grab-button {
+  width: calc(var(--u) * 15);
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 0.5);
+  padding: calc(var(--u) * 1.5) calc(var(--u) * 1);
+  border-radius: calc(var(--u) * 3);
+  border: calc(var(--u) * 0.6) solid #b9b9b9;
+  background: #f4f4f4;
+  box-shadow: 0 calc(var(--u) * 0.8) 0 #9a9a9a;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.grab-button svg {
+  width: calc(var(--u) * 10);
+  height: calc(var(--u) * 10);
+}
+
+.grab-button__label {
+  font-size: calc(var(--u) * 3.2);
+  font-weight: 900;
+  color: #555;
+}
+
+.grab-button.is-ready {
+  border-color: #2fbf5b;
+  background: #e8ffe9;
+  box-shadow: 0 calc(var(--u) * 0.8) 0 #1f8f40, 0 0 calc(var(--u) * 3) rgba(47, 191, 91, 0.7);
+  animation: crane-board-pulse-plain 1s ease-in-out infinite;
+}
+
+.grab-button.is-ready .grab-button__label {
+  color: #1f8f40;
+}
+
+.grab-button.is-holding {
+  border-color: #ffb000;
+  background: #fff4d6;
+  box-shadow: 0 calc(var(--u) * 0.8) 0 #c78600;
+}
+
+.grab-button.is-holding .grab-button__label {
+  color: #a86d00;
+}
+
+.grab-button:active {
+  transform: translateY(calc(var(--u) * 0.6));
+  box-shadow: none;
+}
+
+@keyframes crane-board-pulse-plain {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* おりるボタン（のりかえボタンの場所） */
+.crane-leave {
+  border-color: #e53935;
+  /* 操作パネル（pointer-events: none）の中にあるので、押せるようにする */
+  pointer-events: auto;
+}
+
+.crane-leave__label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--u) * -1.8);
+  transform: translateX(-50%);
+  padding: calc(var(--u) * 0.3) calc(var(--u) * 1.5);
+  border-radius: 999px;
+  background: #e53935;
+  color: #fff;
+  font-size: calc(var(--u) * 2.6);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* あそびをえらぶ画面 */
+.crane-menu {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: calc(var(--u) * 4);
+  pointer-events: auto;
+}
+
+.crane-menu__card {
+  width: calc(var(--u) * 42);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  padding: calc(var(--u) * 2.5);
+  border-radius: calc(var(--u) * 3);
+  border: calc(var(--u) * 0.8) solid #ffd400;
+  background: #fffdf4;
+  box-shadow: 0 calc(var(--u) * 1.2) calc(var(--u) * 3) rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: card-pop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.crane-menu__card:active {
+  transform: scale(0.96);
+}
+
+.crane-menu__art {
+  position: relative;
+  height: calc(var(--u) * 14);
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: calc(var(--u) * 1.5);
+}
+
+.crane-menu__box {
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 7);
+  border-radius: calc(var(--u) * 0.8);
+  border: calc(var(--u) * 0.4) solid #2b2b2b;
+  color: #fff;
+  font-size: calc(var(--u) * 4.5);
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crane-menu__plus {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 calc(var(--u) * 1.5);
+  border-radius: calc(var(--u) * 1);
+  background: #fff;
+  border: calc(var(--u) * 0.4) solid #2f80ed;
+  font-size: calc(var(--u) * 3.6);
+  font-weight: 900;
+}
+
+.crane-menu__art--tower {
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  gap: calc(var(--u) * 0.3);
+}
+
+.crane-menu__art--tower span {
+  height: calc(var(--u) * 3);
+  border-radius: calc(var(--u) * 0.5);
+  border: calc(var(--u) * 0.3) solid #2b2b2b;
+}
+
+.crane-menu__title {
+  font-size: calc(var(--u) * 4);
+  white-space: nowrap;
+  font-weight: 900;
+}
+
+.crane-menu__sub {
+  font-size: calc(var(--u) * 2.6);
+  color: #8b5a2b;
+  font-weight: bold;
+}
+
+/* クレーンのお題（上のまん中） */
+.crane-banner {
+  pointer-events: auto;
+}
+
+.crane-banner__eq {
+  font-size: calc(var(--u) * 5.5);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.crane-banner__eq b {
+  color: #e53935;
+}
+
+.crane-banner__eq b.is-correct {
+  color: #2fbf5b;
+}
+
+.crane-banner__change {
+  margin-top: calc(var(--u) * 0.6);
+  padding: calc(var(--u) * 0.4) calc(var(--u) * 2);
+  border-radius: 999px;
+  border: calc(var(--u) * 0.3) solid #c9c2a8;
+  background: #fff;
+  font-size: calc(var(--u) * 2.4);
+  font-weight: bold;
+  color: #6b5a3a;
+  cursor: pointer;
+}
+
+/* ---------- レベルの一覧 ---------- */
+
+.levels {
+  width: min(90vw, calc(var(--u) * 115));
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--u) * 2.5) calc(var(--u) * 3);
+  border-radius: calc(var(--u) * 3);
+  background: #fffdf4;
+  border: calc(var(--u) * 0.8) solid #2f80ed;
+  box-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 5) rgba(0, 0, 0, 0.35);
+  animation: card-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.levels__head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 2.5);
+  margin-bottom: calc(var(--u) * 1.8);
+}
+
+.levels__now {
+  flex: none;
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 2.4);
+  border-radius: 999px;
+  background: #2f80ed;
+  color: #fff;
+  font-size: calc(var(--u) * 6);
+  font-weight: 900;
+}
+
+.levels__progress {
+  flex: 1;
+  min-width: 0;
+}
+
+.levels__bar {
+  position: relative;
+  height: calc(var(--u) * 3.2);
+  border-radius: 999px;
+  background: #e3e0d4;
+  overflow: hidden;
+}
+
+.levels__bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd400, #ffb000);
+}
+
+.levels__next {
+  margin-top: calc(var(--u) * 0.8);
+  font-size: calc(var(--u) * 3);
+  font-weight: bold;
+  color: #6b5a3a;
+}
+
+.levels__next b {
+  font-size: calc(var(--u) * 3.8);
+  color: #e0a000;
+}
+
+.levels__next b.is-rest {
+  color: #e53935;
+}
+
+.levels__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.levels__row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.8);
+  padding: calc(var(--u) * 1) calc(var(--u) * 1.6);
+  border-radius: calc(var(--u) * 2);
+  background: #f4f1e6;
+}
+
+.levels__row.is-now {
+  background: #fff3b0;
+  box-shadow: 0 0 0 calc(var(--u) * 0.5) #ffd400 inset;
+}
+
+.levels__row.is-locked {
+  background: #eeeeee;
+  color: #888;
+}
+
+.levels__badge {
+  flex: none;
+  min-width: calc(var(--u) * 8);
+  padding: calc(var(--u) * 0.3) calc(var(--u) * 1.2);
+  border-radius: 999px;
+  background: #2f80ed;
+  color: #fff;
+  font-size: calc(var(--u) * 3);
+  font-weight: 900;
+  text-align: center;
+}
+
+.levels__row.is-locked .levels__badge {
+  background: #b9b9b9;
+}
+
+.levels__icon {
+  flex: none;
+  font-size: calc(var(--u) * 5);
+  line-height: 1;
+}
+
+.levels__lines {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: calc(var(--u) * 1.6);
+  font-size: calc(var(--u) * 2.8);
+  font-weight: bold;
+}
+
+.levels__item {
+  white-space: nowrap;
+}
+
+.levels__item::before {
+  content: '●';
+  display: inline-block;
+  margin-right: calc(var(--u) * 0.6);
+  font-size: 0.6em;
+  vertical-align: 0.2em;
+  color: #e0a000;
+}
+
+.levels__row.is-locked .levels__item::before {
+  color: #aaa;
+}
+
+.levels__req {
+  flex: none;
+  font-size: calc(var(--u) * 3.2);
+  font-weight: 900;
+  color: #e0a000;
+}
+
+.levels__row.is-done .levels__req {
+  color: #2fbf5b;
+}
+
+.levels__row.is-locked .levels__req {
+  color: #999;
+}
+
+/* ---------- 基地の建物（じむしょ・しゃこ・こうぼう） ---------- */
+
+.base-enter {
+  border-color: #2f80ed;
+  background: #eef5ff;
+}
+
+.base-enter__icon {
+  font-size: calc(var(--u) * 6);
+  line-height: 1;
+}
+
+.room {
+  width: min(92vw, calc(var(--u) * 120));
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1.6);
+  padding: calc(var(--u) * 2.5) calc(var(--u) * 3);
+  border-radius: calc(var(--u) * 3);
+  background: #fffdf4;
+  border: calc(var(--u) * 0.8) solid #2f80ed;
+  box-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 5) rgba(0, 0, 0, 0.35);
+  animation: card-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+  cursor: default;
+}
+
+.room__title {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.2);
+  font-size: calc(var(--u) * 5);
+  font-weight: 900;
+}
+
+.room__close {
+  margin-left: auto;
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 2.4);
+  border: none;
+  border-radius: 999px;
+  background: #e53935;
+  color: #fff;
+  font-size: calc(var(--u) * 3);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.room__hint {
+  text-align: center;
+  font-size: calc(var(--u) * 2.6);
+  font-weight: bold;
+  color: #8b5a2b;
+}
+
+.office__records {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(var(--u) * 1.2);
+}
+
+.office__record {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--u) * 1.2);
+  border-radius: calc(var(--u) * 2);
+  background: #f4f1e6;
+  font-size: calc(var(--u) * 2.6);
+  font-weight: bold;
+}
+
+.office__icon {
+  font-size: calc(var(--u) * 5.5);
+  line-height: 1.1;
+}
+
+.office__record b {
+  font-size: calc(var(--u) * 3.8);
+  color: #2f80ed;
+}
+
+.office__buttons {
+  display: flex;
+  gap: calc(var(--u) * 1.5);
+  justify-content: center;
+}
+
+.office__buttons button,
+.craft__make {
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 3.5);
+  border: none;
+  border-radius: 999px;
+  background: #2fbf5b;
+  color: #fff;
+  font-size: calc(var(--u) * 3.4);
+  font-weight: 900;
+  box-shadow: 0 calc(var(--u) * 0.6) 0 #1f8f40;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.craft__make:disabled {
+  background: #c9c9c9;
+  box-shadow: 0 calc(var(--u) * 0.6) 0 #9a9a9a;
+  cursor: default;
+}
+
+.garage__vehicles {
+  display: flex;
+  gap: calc(var(--u) * 1.5);
+  justify-content: center;
+}
+
+.garage__vehicle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: calc(var(--u) * 20);
+  padding: calc(var(--u) * 1) calc(var(--u) * 1);
+  border-radius: calc(var(--u) * 2);
+  border: calc(var(--u) * 0.5) solid #e3e0d4;
+  background: #fff;
+  font-size: calc(var(--u) * 2.8);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.garage__vehicle.is-on {
+  border-color: #2f80ed;
+  background: #eef5ff;
+}
+
+.garage__pict {
+  width: calc(var(--u) * 12);
+  height: calc(var(--u) * 12);
+}
+
+.garage__paints {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: calc(var(--u) * 1.2);
+}
+
+.garage__paint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 0.5);
+  padding: calc(var(--u) * 0.8);
+  border-radius: calc(var(--u) * 2);
+  border: calc(var(--u) * 0.5) solid transparent;
+  background: #f4f1e6;
+  font-size: calc(var(--u) * 2.3);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.garage__paint.is-on {
+  border-color: #2f80ed;
+  background: #fff;
+}
+
+.garage__paint.is-locked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.garage__swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
+  border-radius: 50%;
+  border: calc(var(--u) * 0.4) solid rgba(0, 0, 0, 0.25);
+  font-size: calc(var(--u) * 3);
+}
+
+.craft__list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.craft__row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.6);
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 1.6);
+  border-radius: calc(var(--u) * 2);
+  background: #f4f1e6;
+}
+
+.craft__row.is-done {
+  background: #e8ffe9;
+}
+
+.craft__icon {
+  flex: none;
+  width: calc(var(--u) * 7);
+  display: flex;
+  justify-content: center;
+  font-size: calc(var(--u) * 5.5);
+  line-height: 1;
+}
+
+.craft__name {
+  flex: none;
+  width: calc(var(--u) * 26);
+  font-size: calc(var(--u) * 3);
+  font-weight: 900;
+}
+
+.craft__cost {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 0.6) calc(var(--u) * 1.6);
+  font-size: calc(var(--u) * 2.5);
+  font-weight: bold;
+  color: #e53935;
+}
+
+.craft__ore {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.5);
+  white-space: nowrap;
+}
+
+.craft__ore.is-enough {
+  color: #1f8f40;
+}
+
+.craft__dot {
+  width: calc(var(--u) * 2.2);
+  height: calc(var(--u) * 2.2);
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+}
+
+.craft__done {
+  flex: none;
+  font-size: calc(var(--u) * 3);
+  font-weight: 900;
+  color: #1f8f40;
+}
+
+/* 事務所のメニュー・もどるボタン・てんじだな */
+.room__back {
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 2);
+  border: none;
+  border-radius: 999px;
+  background: #2f80ed;
+  color: #fff;
+  font-size: calc(var(--u) * 3);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.office__menu {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(var(--u) * 1.5);
+}
+
+.office__menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--u) * 1.5);
+  border-radius: calc(var(--u) * 2.5);
+  border: calc(var(--u) * 0.5) solid #ffd400;
+  background: #fff8d6;
+  font-size: calc(var(--u) * 3.6);
+  font-weight: 900;
+  box-shadow: 0 calc(var(--u) * 0.6) 0 #e0b800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.office__menu-item:active {
+  transform: translateY(calc(var(--u) * 0.5));
+  box-shadow: none;
+}
+
+.office__menu-icon {
+  font-size: calc(var(--u) * 7);
+  line-height: 1.15;
+}
+
+.showcase__shelf {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--u) * 1.5);
+  padding: calc(var(--u) * 1.5);
+  border-radius: calc(var(--u) * 2);
+  background: linear-gradient(#a0683a, #8a5a32);
+}
+
+.showcase__decor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: calc(var(--u) * 16);
+  padding: calc(var(--u) * 0.8);
+  border-radius: calc(var(--u) * 1.6);
+  background: #fffdf4;
+  font-size: calc(var(--u) * 2.4);
+  font-weight: 900;
+}
+
+.showcase__decor-icon {
+  font-size: calc(var(--u) * 7);
+  line-height: 1.1;
+}
+
+.showcase__gems {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: calc(var(--u) * 1);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.showcase__gem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--u) * 0.6);
+  border-radius: calc(var(--u) * 1.6);
+  background: #f4f1e6;
+  font-size: calc(var(--u) * 2.2);
+  font-weight: 900;
+  text-align: center;
+}
+
+.showcase__gem small {
+  color: #2f80ed;
+}
+
+.showcase__empty {
+  padding: calc(var(--u) * 1) 0;
+  color: #fff;
+  font-size: calc(var(--u) * 2.8);
+  font-weight: 900;
+}
+
+.showcase__label {
+  font-size: calc(var(--u) * 3.2);
+  font-weight: 900;
+}
+
+.showcase__label b {
+  font-size: calc(var(--u) * 4.2);
+  color: #2f80ed;
+}
+
+.zukan__tab small {
+  font-size: 0.8em;
+}
