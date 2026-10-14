@@ -13,11 +13,9 @@ export const BULLDOZER = {
   start: { x: -6, z: 1, heading: 0 },
 
   drive: {
-    /** 2 段階の速さ（カメ = slow / ウサギ = fast） */
-    gears: {
-      slow: { maxSpeed: 2.8, maxReverseSpeed: 2.0, maxTurnRate: 0.9 },
-      fast: { maxSpeed: 5.5, maxReverseSpeed: 3.0, maxTurnRate: 1.2 },
-    },
+    maxSpeed: 5.5,
+    maxReverseSpeed: 3.0,
+    maxTurnRate: 1.2,
     response: 3.0,
     fieldLimit: FIELD.driveLimit,
   },

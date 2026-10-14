@@ -260,6 +260,15 @@ export function createWebAudioManager(): AudioManager {
       thud(55, 0.5, 0.35)
       ;[0.06, 0.13, 0.21, 0.3].forEach((d) => thud(90 + Math.random() * 60, 0.28, 0.18, d))
     },
+    sift: () => {
+      // 小石がこぼれる「ザラザラ」：高めの短い石の音をいくつか
+      ;[0, 0.04, 0.09, 0.13, 0.18].forEach((d) => thud(260 + Math.random() * 180, 0.09, 0.05, d))
+    },
+    clang: () => {
+      // 鉄骨の「カーン」：金属の響き（少しずれた高い音を重ねる）と、低い「ゴン」
+      thud(90, 0.25, 0.12)
+      ;[523, 1307, 2093].forEach((f) => note(f, 0, 0.6, 0.05, 'sine'))
+    },
     findNew: () => {
       ;[1047, 1319, 1568, 2093, 2637].forEach((f, i) => note(f, i * 0.08, 0.45, 0.09, 'sine'))
       ;[523, 659, 784].forEach((f) => note(f, 0.45, 0.8, 0.07))

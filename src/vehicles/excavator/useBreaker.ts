@@ -8,6 +8,7 @@ import { digEffects } from '../../effects/DigEffects'
 import { audio } from '../../audio/AudioManager'
 import { excavatorSensors } from './excavatorSensors'
 import type { RigListener } from '../shared/rig'
+import { buildingActive, hitBuilding, touchingBuilding } from '../../world/demolition'
 
 /** のみの先が岩の形（だ円体）のこの倍まで近ければ「当たっている」（先は岩の上で止まるので、少し広めに） */
 const CONTACT = 1.2
@@ -84,6 +85,18 @@ export function useBreaker(listeners: RefObject<{ update: (dt: number) => void }
         excavatorSensors.hammering = false
         if (excavatorSensors.tool !== 'breaker') return
         const tip = excavatorSensors.bucketTip
+        // 古いビル（Lv7 で出てくる。出ていない間は当たらない）
+        if (buildingActive.value && touchingBuilding(tip.x, tip.y, tip.z)) {
+          excavatorSensors.hammering = true
+          hitBuilding(dt, excavatorSensors.x, excavatorSensors.z)
+          hitTimer -= dt
+          if (hitTimer <= 0) {
+            hitTimer = HIT_INTERVAL
+            audio.play('hammer')
+            digEffects.dust(tip.x, tip.y, tip.z)
+          }
+          return
+        }
         const i = touchingBoulder(tip.x, tip.y, tip.z)
         if (i < 0) {
           hitTimer = 0

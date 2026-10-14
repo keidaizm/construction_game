@@ -32,6 +32,11 @@ import { LogField } from '../cargo/logs/LogField'
 import { SessionKeeper } from '../world/SessionKeeper'
 import { Discoveries } from '../world/Discoveries'
 import { Headlights } from '../world/Headlights'
+import { DemolitionSite } from '../world/DemolitionSite'
+import { ScrapField } from '../cargo/scrap/ScrapField'
+import { useLevel } from '../stores/progressStore'
+import { DEMOLISH_LEVEL, OFFICE_LEVEL } from '../missions/levels'
+import { CitySite } from '../world/CitySite'
 
 /** URL に ?physics を付けると当たり判定の形を表示する（開発用） */
 const physicsDebug = new URLSearchParams(location.search).has('physics')
@@ -52,6 +57,9 @@ function Scene() {
   const crane = useRef<THREE.Object3D>(null)
   const targets = useMemo(() => ({ excavator, dumpTruck, bulldozer, crane }), [])
   const active = useGameStore((s) => s.activeVehicle)
+  // Lv7 から：古いビルとリサイクル場、がれき
+  const level = useLevel().level
+  const demolish = level >= DEMOLISH_LEVEL
 
   return (
     <>
@@ -63,6 +71,8 @@ function Scene() {
       <Water />
       <BoulderField />
       <BuildSite />
+      {/* Lv8 からビル、Lv9 からタワー */}
+      {level >= OFFICE_LEVEL && <CitySite />}
       <Discoveries />
       <PhysicsWorld debug={physicsDebug}>
         <RockField />
@@ -75,6 +85,12 @@ function Scene() {
         <Crane anchorRef={crane} />
         <CraneLoads />
         <LogField />
+        {demolish && (
+          <>
+            <ScrapField />
+            <DemolitionSite />
+          </>
+        )}
         <TreeField />
         <SessionKeeper />
         <CraneGames />

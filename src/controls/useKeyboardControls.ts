@@ -62,10 +62,6 @@ export function useKeyboardControls() {
         useGameStore.getState().toggleHeadlights()
         return
       }
-      if (e.code === 'KeyG' && !e.repeat) {
-        useGameStore.getState().toggleGear()
-        return
-      }
       if (e.code === 'KeyV' && !e.repeat) {
         pressed.clear()
         useInputStore.getState().resetSource('keyboard')

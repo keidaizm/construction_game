@@ -18,6 +18,8 @@ import { GrappleModel, GRAPPLE_TIP } from './parts/GrappleModel'
 import { useGrapple } from './useGrapple'
 import { BreakerModel, BREAKER_TIP } from './parts/BreakerModel'
 import { useBreaker } from './useBreaker'
+import { SkeletonBucketModel } from './parts/SkeletonBucketModel'
+import { useSkeletonBucket } from './useSkeletonBucket'
 import { excavatorSensors } from './excavatorSensors'
 import { useFrame } from '@react-three/fiber'
 import type { RigListener } from '../shared/rig'
@@ -85,7 +87,7 @@ export function Excavator({ rootRef }: { rootRef: RefObject<THREE.Group | null> 
   // ショベル全体の大きさ（Lv5 から 1.3 倍）。先のアタッチメントは、全体の倍率で割って元の大きさのままにする
   const S = level.excavatorScale
   excavatorSensors.scale = S
-  const attachmentScale = (tool === 'bucket' ? level.bucketScale : 1) / S
+  const attachmentScale = (tool === 'bucket' || tool === 'skeleton' ? level.bucketScale : 1) / S
   const chisel = useRef<THREE.Group>(null)
   const jawA = useRef<THREE.Group>(null)
   const jawB = useRef<THREE.Group>(null)
@@ -107,6 +109,7 @@ export function Excavator({ rootRef }: { rootRef: RefObject<THREE.Group | null> 
   useBucketDig(listeners)
   useBreaker(listeners)
   useGrapple(bucket, listeners)
+  useSkeletonBucket(bucket, listeners)
 
   // 影は車両だけが落とす（地面は受けるだけ）
   useEffect(() => {
@@ -146,6 +149,8 @@ export function Excavator({ rootRef }: { rootRef: RefObject<THREE.Group | null> 
                   <BreakerModel ref={chisel} paint={paints.bucket} />
                 ) : tool === 'grapple' ? (
                   <GrappleModel paint={paints.bucket} jawA={jawA} jawB={jawB} />
+                ) : tool === 'skeleton' ? (
+                  <SkeletonBucketModel paint={paints.bucket} accent={accent} />
                 ) : (
                   <BucketModel paint={paints.bucket} accent={accent} />
                 )}

@@ -128,7 +128,26 @@
   近づくと「じむしょに はいる？」→ `gameStore.baseRoom`（office のメニュー → workshop／garage／showcase）。画面は `components/ui/BaseRooms.tsx`。
   クラフト：`craftRecipes.ts`（ペンキ・かざり）、`stores/craftStore.ts`（持っているもの・車の色）、`collectionStore.held`（持っている鉱石。図鑑の counts とは別、クラフトで減る）。
   車の色は `useVehiclePaint`（その車両の中の共有 paintYellow を、車両ごとの材料に入れかえ、部位の材料の色もそろえる）。環境マップがないので metalness は 0.4 まで
-- 次（未着手・ユーザーとブレスト中）：建築資材のクラフト（鉄→てっこつ、銅→どうせん、黒＋白の石→コンクリートなど）と、別マップの「街づくりワールド」
+- **ビルこわし・ふるい・てっこつ（Lv7＝星 60、ユーザー提案。`DEMOLISH_LEVEL`）**：Lv7 になると `GameCanvas` が `DemolitionSite`・`ScrapField` を出す。
+  場所は `world/demolitionLayout.ts`（ビル (12, −66)＝地図の下、リサイクル場＝緑の場所 (18, −28)・半径 5。まわりの木・岩は `nearDemolition` で後から取りのぞく＝乱数の進み方を変えないため。丘も置かない）。
+  ビル（`world/demolition.ts`）：3 階。ブレーカーの先が箱（＋0.7m）に入っている間 `hitBuilding`、1 階 3 秒で上から 1 階ずつこわれ、がれき 2 こをショベルのいる側の外に出す
+  （のみの先はビルの中まで入るので、先ではなくショベルの位置で決める）。全部こわれて 30 秒（車両が跡地にいなければ）で元に戻る（ユーザー判断）。
+  階ごとの kinematic の当たり判定（こわれた階は地面の下へ）・動く障害物・digFloors（屋上）。
+  がれき（`cargo/scrap/`、控え 16）：mixed（コンクリートつき）／steel（鉄骨だけ）。スケルトンバケット（`excavatorTool` 'skeleton'、`useSkeletonBucket`・`SkeletonBucketModel`、大きさは bucketScale）で
+  すくい（3 こまで、石はすくわない）、バケットのレバーで開く⇄閉じるの向きが 6 回変わると steel（ユーザー判断：レバーでゆらす。小石は `digEffects.pebbles` の見た目だけ）。
+  こぼすのは口が下向き、または開くレバー中に開き具合 60% 超だけ（ふるうときにこぼれない・大きく開いた所から巻き込んですくえるように。`excavatorSensors.bucketLever`）。
+  ダンプの荷台はがれきも運ぶ（`loadedScrap`/`loadedSteel`、鉄骨だけなら緑の矢印がリサイクル場へ）。リサイクル場で止まった steel を 1 本ずつ数える（mixed はお知らせだけ）。
+  お題（`stores/scrapStore.ts`、localStorage）：「てっこつを 3〜6 ほん あつめよう」、3 秒以内に数えた分は同じ回（式 2 + 1 = 3）、クリアで星 +2・`SteelClearOverlay`。
+  持っている てっこつ（`steel`）は Lv8・9 の塔・ビルづくりで使う予定。ビル・リサイクル場の近く（40m／22m）か、がれきを積んだダンプでは `MissionBanner` のかわりに `SteelBanner`（いまの手順も出す）。
+  がれきの位置・ビルのこわれ具合は途中セーブに入れていない（読みこむとビルは元どおり、がれきは消える）
+- **ビル（Lv8＝星 68）・タワー（Lv9＝星 76）づくり**（ユーザー提案。`OFFICE_LEVEL`・`TOWER_LEVEL`）：工事現場は基地の東（`world/cityLayout.ts`、`CITY` (−54, 28)＝地図で基地の右。`nearCity` で木・岩・丘をのぞく）。
+  `CitySite.tsx`（Lv8 から GameCanvas が出す）：黄色い輪（資材置き場）で止まった石を 1 こずつ使い（`rockRegistry.despawn`＝元の置き場へ戻る。金色はのぞく）、
+  ビルは石 4 ＋ てっこつ 1 で 1 階（4 階で完成・星 +3、区画 3 つ）、タワー（東京タワー風、赤と白の鉄骨 `cityModels.ts` の latticeGeometry）は石 3 ＋ てっこつ 2 で 1 段（6 段で完成・星 +5）。
+  てっこつは持っている分（`scrapStore.spendSteel`）から自動で使う。足りなければ石を取らずに待つ（看板の数が赤・`CityBanner` で「てっこつが たりない」）。
+  つぎにできる所はうっすら（ghost）、建てている階は鉄骨の骨組み。夜は窓・タワーの色の明るさだけ上げてライトアップ（光源は増やさない）。記録は `stores/cityStore.ts`（localStorage）。
+  資材置き場の近く（26m）では `CityBanner`。石を積んだダンプが工事現場の近く（45m）なら緑の矢印が資材置き場を指す。レベル一覧は開くと いまのレベルの行まで送る
+- 走る速さの切り替え（カメ／ウサギ）は**なくした**（ユーザー判断「あまり使わない」、全車両）。速さはいつも前の「ウサギ」の値
+- 次（未着手・ユーザーとブレスト中）：さらに上のレベルでペンキで色をぬる（タワー・ビルのカスタマイズ）、Lv10 でピラミッドをこわして地下の迷路ダンジョン（ミイラ・黄金の秘宝）。建築資材のクラフト（鉄→てっこつ、銅→どうせん、黒＋白の石→コンクリートなど）と、別マップの「街づくりワールド」
 - **タワークレーン**（`vehicles/crane/`、ユーザー提案「Lv3 以上でクレーンを操作・ミニゲーム」）：VehicleId 'crane'（のりかえの順番には入れない）。
   車両で 18m 以内に近づくと `CraneBoardPrompt`（Lv3 未満は鍵）→ `gameStore.boardCrane()`（previousVehicle を覚え、`leaveCrane()` で戻る）。
   操作：swing＝旋回、arm＝トロリー、boom＝巻き上げ、つかむ／はなすはボタン（`craneStore.pressGrab`、F キー。ユーザー判断：自動ではなくボタン）。
@@ -215,9 +234,8 @@
 - 地面の飾りの砂利は「取れる物」と紛らわしいので小さくし、岩置き場の周りには置かない
 - 描画負荷の目安（開発時 `__game.renderer.info.render.calls`）：基地で全部見えているとき約 270（ブルドーザー追加後 約 316、地帯・水・名所の追加後 約 342）、離れると約 100。実機で要確認
 - ユーザー要望「少しゲームが単調」→ 相談して 音 → 掘る・鉱石・図鑑 → ミッションの種類（つくろう・とりのぞこう・金色の石）の順に追加
-- 走る速さは車両ごとに 2 段階（`gameStore.gears`、ボタンはジョイスティックの右、G キー）。ショベル：ウサギ 6.4 / カメ 3.2 m/s（ユーザー要望「ショベルが遅い」）
-- ダンプの速さは 2 段階（ユーザー要望「まだ遅い」「2 段階で切り替え」）：ウサギ 13 m/s（ふだん）／カメ 5 m/s、G キーか画面のボタン。
-  速いほどハンドルの切れ角を減らす（13 m/s で 40%）
+- 走る速さ：ショベル 6.4 m/s（ユーザー要望「ショベルが遅い」）、ダンプ 13 m/s（「まだ遅い」）、ブルドーザー 5.5 m/s。
+  前はカメ／ウサギの 2 段階だったが、あまり使わないのでなくした（ユーザー判断、2026-10-14）。ダンプは速いほどハンドルの切れ角を減らす（13 m/s で 40%）
 - 「数量はぴったりがおもしろい」「星を集めてグレードアップ、足し算の数が増える」「遣り込み要素がほしい」→ 相談の結果、
   多すぎたら荷台からすくい出せる／グレードアップはバケット拡大＋数の範囲／数は 20 まで（Lv3 で繰り上がり）に決定
 - 「積んだ後どこに持っていけばよいか分からない」「クリアした感覚がほしい」を受けて Phase 4 に進んだ。
@@ -225,13 +243,13 @@
   （平たい矢印を先端側に少し起こしてある。円錐だと後ろからは丸にしか見えなかった）
 - ブルドーザー（ユーザー提案「とりのぞこうミッションにブルドーザーがあると面白い」）：最初から使える。
   **土ブロックは壊せない**（簡単にブロックを壊して石を集められてしまうため。ユーザー判断）。石になったものは押せる。
-  のりかえは ショベル → ダンプ → ブルドーザー の順に回る。速さ ウサギ 5.5 / カメ 2.8 m/s。排土板はレバー 1 本（U/J キー）
+  のりかえは ショベル → ダンプ → ブルドーザー の順に回る。排土板はレバー 1 本（U/J キー）
 - ダンプはショベルの左側（キャブ側、x = 4.6）に置く。右側だとショベル用カメラの視界をふさぐ。
   バケットの届く範囲（持ち上げた姿勢で旋回半径 約 4.3m）に荷台の中心が来る位置
 
 ## 公開（PWA・Vercel）
 
-- GitHub `keidaizm/construction_game`（public）→ Vercel。`vercel.json` で sw.js はキャッシュしない・/assets は長期キャッシュ
+- GitHub `keidaizm/construction_game`（public）→ Vercel（プロジェクト construction-game、GitHub 連携済み＝main に push で自動公開。https://construction-game-rho.vercel.app）。`vercel.json` で sw.js はキャッシュしない・/assets は長期キャッシュ
 - サービスワーカーは手書き（`public/sw.js`、追加ライブラリなし）。本番だけ登録（main.tsx、`import.meta.env.PROD`）。
   install でトップページと、そこに書かれた /assets を保存。ページはネット優先、ファイルはキャッシュ優先。
   キャッシュの作りを変えたら `CACHE` の名前（v1）を上げる
@@ -245,6 +263,7 @@
 - 開発サーバーでは `window.__game`（`rockRegistry`, `excavatorSensors`, `dumpTruckSensors`, `bulldozerSensors`, `game`＝gameStore, `mission`＝missionStore, `progress`＝progressStore）で
   ブラウザのコンソールから状態を確認・変更できる（例：`__game.progress.setState({ stars: 24 })` で Lv3 を試す）
 - `?reset-progress`：集めた星・地図の記録・図鑑を消して Lv1 から
+- `window.__game` には `input`（inputStore。`setAxes('keyboard', {boom: -1})` でレバーを入れられる）・`scrap`（scrapRegistry）・`scrapStore`・`building`・`city`（cityStore）もある
 - `window.__game` には `collection`（collectionStore）・`dirt`（dirtRegistry）・`exploration`（explorationStore）・`renderer` もある
 - **ファイル名は大文字・小文字だけ違う名前にしない**（Windows では同じファイル扱いになり、tsc が TS1149 で止まる）。例：`DayNight.tsx` と `dayNightState.ts`、`Water.tsx` と `waterLayout.ts`
 - ヘッドレス Chrome（ソフトウェア描画）は約 9fps しか出ず、`dt` を 1/20 秒で打ち切っているためゲーム内の時間が実時間より遅く進む。自動テストではキーを長めに押すこと

@@ -207,38 +207,6 @@ export function TruckTopIcon() {
   )
 }
 
-/** カメ（ゆっくり）。ダンプの速さ切り替えボタンに使う */
-export function TurtleIcon() {
-  return (
-    <svg viewBox="0 0 64 64" className="pictogram" aria-hidden>
-      <ellipse cx={14} cy={44} rx={5} ry={4} fill="#6fbf4a" stroke={INK} strokeWidth={1.5} />
-      <ellipse cx={46} cy={44} rx={5} ry={4} fill="#6fbf4a" stroke={INK} strokeWidth={1.5} />
-      <circle cx={54} cy={34} r={6} fill="#6fbf4a" stroke={INK} strokeWidth={1.5} />
-      <circle cx={56} cy={32} r={1.3} fill={INK} />
-      <path d="M 8 40 Q 12 18 30 17 Q 48 18 50 40 Z" fill="#3f8f3a" stroke={INK} strokeWidth={1.8} />
-      <path d="M 18 36 L 22 26 L 30 23 L 38 26 L 42 36" fill="none" stroke="#9ad17a" strokeWidth={2} strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-/** ウサギ（はやい）。ダンプの速さ切り替えボタンに使う */
-export function RabbitIcon() {
-  return (
-    <svg viewBox="0 0 64 64" className="pictogram" aria-hidden>
-      <ellipse cx={40} cy={10} rx={4} ry={10} transform="rotate(20 40 18)" fill="#fff" stroke={INK} strokeWidth={1.5} />
-      <ellipse cx={48} cy={12} rx={4} ry={10} transform="rotate(35 48 20)" fill="#fff" stroke={INK} strokeWidth={1.5} />
-      <ellipse cx={28} cy={40} rx={18} ry={12} fill="#fff" stroke={INK} strokeWidth={1.8} />
-      <circle cx={46} cy={28} r={9} fill="#fff" stroke={INK} strokeWidth={1.8} />
-      <circle cx={49} cy={26} r={1.4} fill={INK} />
-      <circle cx={10} cy={36} r={4} fill="#fff" stroke={INK} strokeWidth={1.5} />
-      {/* 速さの線 */}
-      {[26, 34, 42].map((y) => (
-        <line key={y} x1={0} x2={6} y1={y + 12} y2={y + 12} stroke="#2f80ed" strokeWidth={2.5} strokeLinecap="round" />
-      ))}
-    </svg>
-  )
-}
-
 /** 横から見たショベルカー。乗り換えボタンに使う */
 export function ExcavatorSideIcon() {
   return <ArmPictogram pose={{ boom: 45, arm: -110, bucket: -60 }} highlight="boom" color={BODY} />
@@ -504,6 +472,42 @@ export function GrappleToolIcon() {
       <path d="M 40 21 Q 54 32 46 50 L 41 48 Q 46 34 36 24 Z" fill="#9b51e0" stroke={INK} strokeWidth={1.8} strokeLinejoin="round" />
       <rect x={16} y={40} width={32} height={9} rx={4.5} fill="#7a4f2a" stroke={INK} strokeWidth={1.5} />
       <circle cx={46} cy={44.5} r={3} fill="#e2c08a" stroke={INK} strokeWidth={1} />
+    </svg>
+  )
+}
+
+/** アタッチメントの絵：スケルトンバケット（すき間のあいた、ふるいのバケット） */
+export function SkeletonToolIcon() {
+  return (
+    <svg viewBox="0 0 64 64" className="pictogram" aria-hidden>
+      <rect x={28} y={4} width={8} height={18} fill={BODY} stroke={INK} strokeWidth={1.5} />
+      <path d="M 14 24 L 50 24 L 46 48 Q 32 58 18 48 Z" fill="#00a3a3" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
+      {/* すき間（ここから小石が落ちる） */}
+      {[21, 28, 35, 42].map((x) => (
+        <rect key={x} x={x} y={28} width={3.5} height={20} rx={1} fill="#e8f7f7" stroke={INK} strokeWidth={0.8} />
+      ))}
+      {[22, 32, 42].map((x, i) => (
+        <circle key={x} cx={x} cy={58 + (i % 2) * 2} r={2} fill="#a9a8a2" stroke={INK} strokeWidth={0.8} />
+      ))}
+    </svg>
+  )
+}
+
+/** 鉄骨（H 形鋼）の絵。concrete = true ならコンクリートのかたまりつき（ふるう前） */
+export function SteelBeamIcon({ concrete = false, faded = false }: { concrete?: boolean; faded?: boolean }) {
+  return (
+    <svg viewBox="0 0 64 64" className="gem-icon" aria-hidden opacity={faded ? 0.3 : 1}>
+      <g transform="rotate(-20 32 32)">
+        <rect x={6} y={22} width={52} height={6} fill="#b04a2e" stroke={INK} strokeWidth={1.5} />
+        <rect x={6} y={28} width={52} height={8} fill="#8a3820" stroke={INK} strokeWidth={1.5} />
+        <rect x={6} y={36} width={52} height={6} fill="#b04a2e" stroke={INK} strokeWidth={1.5} />
+      </g>
+      {concrete && (
+        <>
+          <path d="M 10 30 L 18 22 L 28 26 L 26 40 L 14 42 Z" fill="#a9a8a2" stroke={INK} strokeWidth={1.5} strokeLinejoin="round" />
+          <path d="M 36 24 L 46 20 L 52 30 L 44 36 L 36 32 Z" fill="#a9a8a2" stroke={INK} strokeWidth={1.5} strokeLinejoin="round" />
+        </>
+      )}
     </svg>
   )
 }

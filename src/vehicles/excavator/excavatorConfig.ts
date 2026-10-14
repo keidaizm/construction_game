@@ -10,15 +10,9 @@ const deg = (d: number) => (d * Math.PI) / 180
  */
 export const EXCAVATOR = {
   drive: {
-    /**
-     * 2 段階の速さ（画面のカメ／ウサギのボタンで切り替え）
-     * - slow：石の近くで細かく動かすとき（もとの速さ）
-     * - fast：遠くの石の場所まで走るとき（約 2 倍。ふだんはこちら）
-     */
-    gears: {
-      slow: { maxSpeed: 3.2, maxReverseSpeed: 2.2, maxTurnRate: 0.9 },
-      fast: { maxSpeed: 6.4, maxReverseSpeed: 3.5, maxTurnRate: 1.2 },
-    },
+    maxSpeed: 6.4,
+    maxReverseSpeed: 3.5,
+    maxTurnRate: 1.2,
     response: 3.0,
     fieldLimit: FIELD.driveLimit, // この範囲から出られない
   },

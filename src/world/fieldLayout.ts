@@ -5,6 +5,8 @@ import { seededRandom } from './textures'
 import { biomeAt, type Biome } from './biomes'
 import { BRIDGES, bridgePose, isInWater, LAKES, WATER_OBSTACLES } from './waterLayout'
 import { CHEST_RADIUS, CHESTS, SIGHTS } from './discoveryLayout'
+import { nearDemolition } from './demolitionLayout'
+import { nearCity } from './cityLayout'
 
 /**
  * フィールドの配置（3D の表示と地図の両方で使う）。
@@ -111,14 +113,17 @@ function scatter<T extends Prop>(
   return props
 }
 
-/** 地帯ごとに散らばる木 */
+/**
+ * 地帯ごとに散らばる木。Lv7 のビル・リサイクル場、Lv8・9 の工事現場のまわりは、あとから取りのぞく
+ * （isKeepClear に足すと乱数の進み方が変わって、ほかの木の場所まで全部変わってしまうため）
+ */
 const BIOME_TREES: readonly TreeProp[] = scatter(320, 21, 25, FIELD.driveLimit - 5, (s) => 0.9 * s, (x, z, rand, base) => {
   const biome = biomeAt(x, z)
   const rule = TREE_RULES[biome]
   if (rand() > rule.density) return null
   const kind = rule.kinds[Math.floor(rand() * rule.kinds.length)]
   return { ...base, kind, biome, fellable: biome !== 'base' && kind !== 'cactus' }
-})
+}).filter((t) => !nearDemolition(t.x, t.z, t.r) && !nearCity(t.x, t.z, t.r))
 /** 砂漠のオアシスのまわりのヤシの木 */
 const PALMS: readonly TreeProp[] = (() => {
   const oasis = LAKES[1]
@@ -145,7 +150,7 @@ export const BOULDERS: readonly BoulderProp[] = scatter(110, 57, 28, FIELD.drive
   const biome = biomeAt(x, z)
   if (rand() > BOULDER_DENSITY[biome]) return null
   return { ...base, biome }
-})
+}).filter((b) => !nearDemolition(b.x, b.z, b.r) && !nearCity(b.x, b.z, b.r))
 
 /** 目印（遠くからでも分かる建物） */
 export const LANDMARKS = {
