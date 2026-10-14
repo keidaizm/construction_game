@@ -1,6 +1,5 @@
 import { PART_COLORS } from '../../vehicles/shared/materials'
 import { TruckSidePictogram, TruckTopIcon } from './icons'
-import { GearToggle } from './GearToggle'
 import { Joystick } from './Joystick'
 import { Lever } from './Lever'
 
@@ -8,14 +7,13 @@ const ARROW_POS = { x: 54, y: 12 }
 
 /**
  * ダンプカー用のタッチ操作パネル。
- * 左下：運転（上 = 進む、下 = バック、左右 = ハンドル）・速さの切り替え / 右：荷台の上げ下げ
+ * 左下：運転（上 = 進む、下 = バック、左右 = ハンドル） / 右：荷台の上げ下げ
  */
 export function DumpTruckControls() {
   return (
     <div className="controls-overlay">
       <div className="drive-zone">
         <Joystick icon={<TruckTopIcon />} label="うんてん" />
-        <GearToggle />
       </div>
 
       <div className="work-zone">

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { ExcavatorTool } from '../../stores/gameStore'
 
 /**
  * ショベルカーの状態のうち、他のシステム（「とれる」マーカー、将来のミッション判定など）が
@@ -19,10 +20,12 @@ export const excavatorSensors = {
   bucketOpenUp: 0,
   /** バケットの開き具合（0 = いちばん巻き込んだ / 1 = いちばん開いた） */
   bucketOpenRatio: 0,
+  /** バケットのレバー（+ 開く / - 巻き込む、-1〜1） */
+  bucketLever: 0,
   /** すくう動きをしているか（アームを引いている・バケットを巻き込んでいる）。石を引き寄せる合図 */
   scooping: false,
   /** いま付けているアタッチメント */
-  tool: 'bucket' as 'bucket' | 'breaker' | 'grapple',
+  tool: 'bucket' as ExcavatorTool,
   /** グラップルのつめの開き具合（0 = 閉じた / 1 = いちばん開いた） */
   grappleOpen: 0.6,
   /** ブレーカーで岩を叩いているところか（のみを振動させる） */

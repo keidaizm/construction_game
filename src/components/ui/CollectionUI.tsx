@@ -3,7 +3,7 @@ import { useCollectionStore } from '../../stores/collectionStore'
 import { useGameStore } from '../../stores/gameStore'
 import { ORES, type OreType } from '../../cargo/ores/oreTypes'
 import { useToastStore } from '../../stores/toastStore'
-import { MoonIcon, SightIcon, SunsetIcon } from './icons'
+import { MoonIcon, SightIcon, SteelBeamIcon, SunsetIcon } from './icons'
 import { BIOME_INFO, type OuterBiome } from '../../world/biomes'
 import { CHESTS, SIGHTS } from '../../world/discoveryLayout'
 import { useDiscoveryStore } from '../../stores/discoveryStore'
@@ -49,6 +49,8 @@ export function FindToast() {
         <span className="find-toast__sight">
           <SightIcon sight={SIGHTS.find((s) => s.id === toast.sight)!} />
         </span>
+      ) : toast.icon === 'steel' ? (
+        <SteelBeamIcon concrete />
       ) : (
         <GemIcon ore={{ id: 'coal', name: '', color: toast.color, glow: 0.5, weight: 0, stars: 0 }} />
       )}

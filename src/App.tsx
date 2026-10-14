@@ -9,6 +9,7 @@ import { useKeyboardControls } from './controls/useKeyboardControls'
 import { MapOverlay } from './components/ui/MapOverlay'
 import { MapCompleteOverlay } from './components/ui/MapComplete'
 import { FindToast, ZukanButton, ZukanOverlay } from './components/ui/CollectionUI'
+import { SteelClearOverlay } from './components/ui/SteelUI'
 
 const showFps = new URLSearchParams(location.search).has('fps')
 
@@ -24,6 +25,7 @@ export default function App() {
       <FindToast />
       <MissionBanner />
       <ClearOverlay />
+      <SteelClearOverlay />
       <MapOverlay />
       <ZukanOverlay />
       <BaseRoomOverlay />

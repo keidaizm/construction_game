@@ -15,4 +15,7 @@ export const dumpTruckSensors = {
   loadedCount: 0,
   /** 荷台に載っている木材の数（Lv6。緑の矢印が家の区画を指す） */
   loadedLogs: 0,
+  /** 荷台に載っているがれきの数と、そのうち鉄骨だけ（ふるい終わった）の数（Lv7。緑の矢印がリサイクル場を指す） */
+  loadedScrap: 0,
+  loadedSteel: 0,
 }

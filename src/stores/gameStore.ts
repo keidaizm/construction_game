@@ -4,20 +4,25 @@ import { useInputStore } from './inputStore'
 import { audio } from '../audio/AudioManager'
 import { useCraneStore } from './craneStore'
 import { useProgressStore } from './progressStore'
-import { BREAKER_LEVEL, GRAPPLE_LEVEL, levelForStars } from '../missions/levels'
+import { BREAKER_LEVEL, DEMOLISH_LEVEL, GRAPPLE_LEVEL, levelForStars } from '../missions/levels'
 
 /** 将来の視点切り替え用。Phase 1 では 'chase' のみ実装。 */
 export type CameraMode = 'chase' | 'cab' | 'top'
 
-/** 走る速さの段階（カメ = slow / ウサギ = fast）。車両ごとに持つ */
-export type Gear = 'slow' | 'fast'
-
-/** ショベルのアタッチメント：バケット（すくう）／油圧ブレーカー（大きな岩を割る、Lv4）／グラップル（木材をつかむ、Lv6） */
-export type ExcavatorTool = 'bucket' | 'breaker' | 'grapple'
+/**
+ * ショベルのアタッチメント：バケット（すくう）／油圧ブレーカー（大きな岩・ビルを割る、Lv4）／グラップル（木材をつかむ、Lv6）／
+ * スケルトンバケット（がれきをふるって鉄骨だけにする、Lv7）
+ */
+export type ExcavatorTool = 'bucket' | 'breaker' | 'grapple' | 'skeleton'
 
 /** そのレベルで使えるアタッチメント（切り替えボタンはこの順に回る） */
 export function availableTools(level: number): ExcavatorTool[] {
-  return ['bucket', ...(level >= BREAKER_LEVEL ? (['breaker'] as const) : []), ...(level >= GRAPPLE_LEVEL ? (['grapple'] as const) : [])]
+  return [
+    'bucket',
+    ...(level >= BREAKER_LEVEL ? (['breaker'] as const) : []),
+    ...(level >= GRAPPLE_LEVEL ? (['grapple'] as const) : []),
+    ...(level >= DEMOLISH_LEVEL ? (['skeleton'] as const) : []),
+  ]
 }
 
 /** 時間帯（ボタンで 昼 → 夕焼け → 夜 → 昼… と回る） */
@@ -44,12 +49,9 @@ interface GameState {
   boardCrane: () => void
   /** クレーンからおりて、乗ってきた車両に戻る */
   leaveCrane: () => void
-  gears: Record<VehicleId, Gear>
   /** ショベルの先のアタッチメント（Lv4 から油圧ブレーカーに付けかえられる） */
   excavatorTool: ExcavatorTool
   toggleExcavatorTool: () => void
-  /** 乗っている車両の速さを切り替える */
-  toggleGear: () => void
   /** 地図を開いているか */
   mapOpen: boolean
   toggleMap: () => void
@@ -93,7 +95,6 @@ export const useGameStore = create<GameState>((set) => ({
     audio.play('switch')
     set((s) => ({ activeVehicle: s.previousVehicle }))
   },
-  gears: { excavator: 'fast', dumpTruck: 'fast', bulldozer: 'fast', crane: 'slow' },
   excavatorTool: 'bucket',
   toggleExcavatorTool: () => {
     const tools = availableTools(levelForStars(useProgressStore.getState().stars).level)
@@ -101,8 +102,6 @@ export const useGameStore = create<GameState>((set) => ({
     audio.play('switch')
     set((s) => ({ excavatorTool: tools[(tools.indexOf(s.excavatorTool) + 1) % tools.length] }))
   },
-  toggleGear: () =>
-    set((s) => ({ gears: { ...s.gears, [s.activeVehicle]: s.gears[s.activeVehicle] === 'fast' ? 'slow' : 'fast' } })),
   mapOpen: false,
   toggleMap: () => set((s) => ({ mapOpen: !s.mapOpen, zukanOpen: false, levelsOpen: false, baseRoom: null })),
   zukanOpen: false,

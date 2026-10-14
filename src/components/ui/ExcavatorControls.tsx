@@ -2,7 +2,6 @@ import { PART_COLORS } from '../../vehicles/shared/materials'
 import { ArmPictogram, SwingPictogram } from './icons'
 import { Joystick } from './Joystick'
 import { Lever } from './Lever'
-import { GearToggle } from './GearToggle'
 import { ToolToggle } from './ToolToggle'
 
 const C = PART_COLORS
@@ -17,7 +16,6 @@ export function ExcavatorControls() {
     <div className="controls-overlay">
       <div className="drive-zone">
         <Joystick />
-        <GearToggle />
         <ToolToggle />
       </div>
 

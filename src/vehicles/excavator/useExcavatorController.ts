@@ -98,10 +98,9 @@ export function useExcavatorController(
     const d = EXCAVATOR.drive
     const fwd = shapeInput(input.driveY)
     const turn = shapeInput(input.driveX)
-    const gear = d.gears[useGameStore.getState().gears.excavator]
-    const targetSpeed = fwd >= 0 ? fwd * gear.maxSpeed : fwd * gear.maxReverseSpeed
+    const targetSpeed = fwd >= 0 ? fwd * d.maxSpeed : fwd * d.maxReverseSpeed
     s.speed = approach(s.speed, targetSpeed, d.response, dt)
-    s.turnRate = approach(s.turnRate, -turn * gear.maxTurnRate, d.response, dt) // + で左旋回
+    s.turnRate = approach(s.turnRate, -turn * d.maxTurnRate, d.response, dt) // + で左旋回
     const heading = s.heading + s.turnRate * dt
     const next = {
       x: clamp(s.x + Math.sin(heading) * s.speed * dt, -d.fieldLimit, d.fieldLimit),
@@ -226,6 +225,7 @@ export function useExcavatorController(
     excavatorSensors.cabHeading = s.heading + s.swing.angle
     excavatorSensors.bucketOpenRatio = (s.bucket.angle - EXCAVATOR.bucket.min) / (EXCAVATOR.bucket.max - EXCAVATOR.bucket.min)
     excavatorSensors.scooping = armIn < -0.1 || bucketIn < -0.1
+    excavatorSensors.bucketLever = bucketIn
     for (const l of listeners.current) l.update(dt)
 
     // 操作中の部位をほんのり光らせる

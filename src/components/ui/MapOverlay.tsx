@@ -15,7 +15,12 @@ import { useBoulderStore } from '../../world/boulders'
 import { useHouseStore } from '../../stores/houseStore'
 import { PLOTS, PLOT_RADIUS } from '../../world/buildSiteLayout'
 import { useLevel } from '../../stores/progressStore'
-import { GRAPPLE_LEVEL } from '../../missions/levels'
+import { DEMOLISH_LEVEL, GRAPPLE_LEVEL } from '../../missions/levels'
+import { BUILDING, DEMOLITION_SITE, RECYCLE_YARD } from '../../world/demolitionLayout'
+import { useBuildingStore } from '../../world/demolition'
+import { OFFICE, OFFICE_PLOTS, TOWER, TOWER_RING, TOWER_STAGES, CITY_RING_RADIUS, officeRing } from '../../world/cityLayout'
+import { useCityStore } from '../../stores/cityStore'
+import { OFFICE_LEVEL, TOWER_LEVEL } from '../../missions/levels'
 import { BRIDGE_WIDTH, BRIDGES, LAKES, RIVER, RIVER_WIDTH, bridgePose } from '../../world/waterLayout'
 import { ALL_MOUNDS } from '../../cargo/dirt/dirtConfig'
 import { excavatorSensors } from '../../vehicles/excavator/excavatorSensors'
@@ -164,6 +169,8 @@ export function MapOverlay() {
   const brokenBoulders = useBoulderStore((s) => s.broken)
   const houses = useHouseStore((s) => s.built)
   const levelNow = useLevel().level
+  const buildingFloors = useBuildingStore((s) => s.floors)
+  const city = useCityStore()
   // 木が倒れたり生えたりしたら描きなおす
   useForestStore((s) => s.version)
   const { parts, colorCounts } = useMissionStore()
@@ -264,6 +271,54 @@ export function MapOverlay() {
         ))}
         {houses < PLOTS.length && levelNow >= GRAPPLE_LEVEL && (
           <circle cx={sx(PLOTS[houses].x)} cy={sy(PLOTS[houses].z)} r={PLOT_RADIUS} fill="rgba(255,212,0,0.35)" stroke="#e0b800" strokeWidth={1.5} strokeDasharray="3 2" />
+        )}
+        {/* Lv7：古いビル（こわれていたら跡地）と、リサイクル場（緑の場所、いつも見える） */}
+        {levelNow >= DEMOLISH_LEVEL && (
+          <>
+            <rect
+              x={sx(DEMOLITION_SITE.x) - BUILDING.width / 2}
+              y={sy(DEMOLITION_SITE.z) - BUILDING.depth / 2}
+              width={BUILDING.width}
+              height={BUILDING.depth}
+              fill={buildingFloors > 0 ? '#9a9488' : 'rgba(120,110,100,0.35)'}
+              stroke="#3a3430"
+              strokeWidth={1.2}
+            />
+            {buildingFloors > 0 && (
+              <text x={sx(DEMOLITION_SITE.x)} y={sy(DEMOLITION_SITE.z) - 6} fontSize={16} textAnchor="middle" className="map__pulse">
+                🏢
+              </text>
+            )}
+            <circle cx={sx(RECYCLE_YARD.x)} cy={sy(RECYCLE_YARD.z)} r={RECYCLE_YARD.radius} fill="rgba(47,191,91,0.55)" stroke="#fff" strokeWidth={1.2} />
+            <path
+              d={`M ${sx(RECYCLE_YARD.x) - 3} ${sy(RECYCLE_YARD.z) - 3} h 6 M ${sx(RECYCLE_YARD.x)} ${sy(RECYCLE_YARD.z) - 3} v 6 M ${sx(RECYCLE_YARD.x) - 3} ${sy(RECYCLE_YARD.z) + 3} h 6`}
+              stroke="#b04a2e"
+              strokeWidth={1.8}
+            />
+          </>
+        )}
+        {/* Lv8・9：工事現場（建てたビル・タワーと、いまの資材置き場） */}
+        {levelNow >= OFFICE_LEVEL && (
+          <>
+            {OFFICE_PLOTS.map((p, i) =>
+              i < city.offices || (i === city.offices && city.officeFloors > 0) ? (
+                <rect key={`office${i}`} x={sx(p.x) - OFFICE.width / 2} y={sy(p.z) - OFFICE.depth / 2} width={OFFICE.width} height={OFFICE.depth} fill={i < city.offices ? '#5f8db3' : 'rgba(95,141,179,0.45)'} stroke="#2b4a66" strokeWidth={1} />
+              ) : null,
+            )}
+            {city.offices < OFFICE_PLOTS.length && (
+              <circle cx={sx(officeRing(city.offices).x)} cy={sy(officeRing(city.offices).z)} r={CITY_RING_RADIUS} fill="rgba(255,212,0,0.35)" stroke="#e0b800" strokeWidth={1.5} strokeDasharray="3 2" />
+            )}
+            {levelNow >= TOWER_LEVEL && (
+              <>
+                <text x={sx(TOWER.x)} y={sy(TOWER.z) + 8} fontSize={22} textAnchor="middle" opacity={city.towerStage >= TOWER_STAGES.length ? 1 : 0.45}>
+                  🗼
+                </text>
+                {city.towerStage < TOWER_STAGES.length && (
+                  <circle cx={sx(TOWER_RING.x)} cy={sy(TOWER_RING.z)} r={CITY_RING_RADIUS} fill="rgba(255,212,0,0.35)" stroke="#e0b800" strokeWidth={1.5} strokeDasharray="3 2" />
+                )}
+              </>
+            )}
+          </>
         )}
         {/* 名所と宝箱（行ったことのある場所なら） */}
         {SIGHTS.filter((s) => seen(s.x, s.z)).map((s) =>

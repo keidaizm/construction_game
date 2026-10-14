@@ -67,10 +67,9 @@ export function useBulldozerController(
     const d = BULLDOZER.drive
     const fwd = shapeInput(input.driveY)
     const turn = shapeInput(input.driveX)
-    const gear = d.gears[useGameStore.getState().gears.bulldozer]
-    const targetSpeed = fwd >= 0 ? fwd * gear.maxSpeed : fwd * gear.maxReverseSpeed
+    const targetSpeed = fwd >= 0 ? fwd * d.maxSpeed : fwd * d.maxReverseSpeed
     s.speed = approach(s.speed, targetSpeed, d.response, dt)
-    s.turnRate = approach(s.turnRate, -turn * gear.maxTurnRate, d.response, dt)
+    s.turnRate = approach(s.turnRate, -turn * d.maxTurnRate, d.response, dt)
     const heading = s.heading + s.turnRate * dt
     const next = {
       x: clamp(s.x + Math.sin(heading) * s.speed * dt, -d.fieldLimit, d.fieldLimit),

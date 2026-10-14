@@ -1,4 +1,4 @@
-import { useGameStore, type ExcavatorTool, type Gear, type TimeOfDay } from './gameStore'
+import { useGameStore, type ExcavatorTool, type TimeOfDay } from './gameStore'
 import { useMissionStore, type Load, type StarResult, type MissionStatus, type ColorCounts } from './missionStore'
 import type { MissionKind, MissionPart } from '../missions/levels'
 import type { VehicleId } from '../vehicles/types'
@@ -16,7 +16,8 @@ import { requestTeleport, vehicleStates } from '../vehicles/shared/devTeleport'
  * 2 秒ごとと、ほかのアプリに切りかえたときに保存する。「はじめから」を押すと、その様子が次に保存される。
  */
 const KEY = 'kenki-asobi-session'
-const VERSION = 1
+/** 3：Lv7 のビル・Lv8・9 の工事現場のまわりの木・岩を取りのぞいて番号がずれたので、前のセーブは読まない */
+const VERSION = 3
 
 interface Vec {
   x: number
@@ -32,7 +33,6 @@ interface SessionSave {
   game: {
     activeVehicle: VehicleId
     previousVehicle: VehicleId
-    gears: Record<VehicleId, Gear>
     excavatorTool: ExcavatorTool
     timeOfDay: TimeOfDay
     headlights: boolean
@@ -112,7 +112,6 @@ export function saveSession() {
     game: {
       activeVehicle: g.activeVehicle,
       previousVehicle: g.previousVehicle,
-      gears: g.gears,
       excavatorTool: g.excavatorTool,
       timeOfDay: g.timeOfDay,
       headlights: g.headlights,
@@ -165,7 +164,6 @@ if (pendingSave) {
   useGameStore.setState({
     activeVehicle: g.activeVehicle,
     previousVehicle: g.previousVehicle,
-    gears: { ...useGameStore.getState().gears, ...g.gears },
     excavatorTool: g.excavatorTool,
     timeOfDay: g.timeOfDay,
     headlights: g.headlights,

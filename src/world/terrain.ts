@@ -6,6 +6,8 @@ import { ALL_MOUNDS } from '../cargo/dirt/dirtConfig'
 import { BRIDGES, LAKES, bridgePose, isInWater } from './waterLayout'
 import { CHESTS, SIGHTS } from './discoveryLayout'
 import { BUILD_SITE, FIELD, LANDMARKS } from './fieldLayout'
+import { nearDemolition } from './demolitionLayout'
+import { nearCity } from './cityLayout'
 
 /**
  * 坂や丘（ユーザー要望「景色に変化を」）。なだらかな丸い丘をいくつか置き、車両は丘にそって傾いて走る。
@@ -35,6 +37,7 @@ function needsFlat(x: number, z: number) {
   if (Math.hypot(x, z) < 45) return true
   if (Math.hypot(x - LANDMARKS.crane.x, z - LANDMARKS.crane.z) < 24) return true
   if (Math.hypot(x - BUILD_SITE.x, z - BUILD_SITE.z) < BUILD_SITE.radius + 4) return true
+  if (nearDemolition(x, z, 6) || nearCity(x, z, 6)) return true
   if (Math.hypot(x - DELIVERY_ZONE.x, z - DELIVERY_ZONE.z) < DELIVERY_ZONE.radius + 12) return true
   if (ROCK_SITES.some((s) => Math.hypot(x - s.center[0], z - s.center[1]) < 20)) return true
   if (ALL_MOUNDS.some((m) => Math.hypot(x - m.center[0], z - m.center[1]) < 14)) return true

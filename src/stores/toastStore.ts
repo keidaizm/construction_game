@@ -3,11 +3,11 @@ import type { SightId } from '../world/discoveryLayout'
 
 /**
  * 画面のまん中あたりに少しだけ出るお知らせ（「◯◯ を みつけた！」など）。
- * icon：'gem' = 宝石の絵（color の色）／'star' = 星／'sight' = 名所の絵（sight）
+ * icon：'gem' = 宝石の絵（color の色）／'star' = 星／'sight' = 名所の絵（sight）／'steel' = 鉄骨の絵
  */
 export interface Toast {
   title: string
-  icon: 'gem' | 'star' | 'sight'
+  icon: 'gem' | 'star' | 'sight' | 'steel'
   sight?: SightId
   color: string
   /** レア度の★の数（0 なら出さない） */

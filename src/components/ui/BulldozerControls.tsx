@@ -1,6 +1,5 @@
 import { PART_COLORS } from '../../vehicles/shared/materials'
 import { BulldozerSidePictogram, BulldozerTopIcon } from './icons'
-import { GearToggle } from './GearToggle'
 import { Joystick } from './Joystick'
 import { Lever } from './Lever'
 
@@ -8,14 +7,13 @@ const ARROW_POS = { x: 30, y: 12 }
 
 /**
  * ブルドーザー用のタッチ操作パネル。
- * 左下：運転（ショベルと同じ履帯の動き）・速さの切り替え / 右：排土板の上げ下げ
+ * 左下：運転（ショベルと同じ履帯の動き） / 右：排土板の上げ下げ
  */
 export function BulldozerControls() {
   return (
     <div className="controls-overlay">
       <div className="drive-zone">
         <Joystick icon={<BulldozerTopIcon />} label="うんてん" />
-        <GearToggle />
       </div>
 
       <div className="work-zone">

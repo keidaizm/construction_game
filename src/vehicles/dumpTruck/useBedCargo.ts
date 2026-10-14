@@ -3,6 +3,7 @@ import { useRapier } from '@react-three/rapier'
 import * as THREE from 'three'
 import { rockRegistry, type RockEntry } from '../../cargo/rocks/rockRegistry'
 import { logRegistry, type LogEntry } from '../../cargo/logs/logRegistry'
+import { scrapRegistry, type ScrapEntry } from '../../cargo/scrap/scrapRegistry'
 import { useGameStore } from '../../stores/gameStore'
 import { audio } from '../../audio/AudioManager'
 import type { RigListener } from '../shared/rig'
@@ -11,9 +12,10 @@ import { dumpTruckSensors } from './dumpTruckSensors'
 
 const { cargo: C } = DUMP_TRUCK
 
-/** 荷台に載せられるもの：岩と木材（Lv6） */
-type Cargo = RockEntry | LogEntry
+/** 荷台に載せられるもの：岩と木材（Lv6）とがれき（Lv7） */
+type Cargo = RockEntry | LogEntry | ScrapEntry
 const isRock = (c: Cargo): c is RockEntry => 'batchId' in c
+const isScrap = (c: Cargo): c is ScrapEntry => 'sift' in c
 
 interface Loaded {
   rock: Cargo
@@ -126,7 +128,7 @@ export function useBedCargo(
         // --- 荷台の中で落ち着いた岩を固定する ---
         if (angle < C.attachBelowAngle && Math.abs(dumpTruckSensors.speed) < 0.3) {
           inv.copy(b.matrixWorld).invert()
-          for (const rock of [...rockRegistry.rocks, ...logRegistry.logs]) {
+          for (const rock of [...rockRegistry.rocks, ...logRegistry.logs, ...scrapRegistry.pieces]) {
             if (rock.state !== 'free') continue
             const t = rock.body.translation()
             p.set(t.x, t.y, t.z).applyMatrix4(inv)
@@ -148,8 +150,20 @@ export function useBedCargo(
         }
 
         // 数える（札・ミッション）のは岩だけ
-        dumpTruckSensors.loadedCount = loaded.current.filter((l) => isRock(l.rock)).length
-        dumpTruckSensors.loadedLogs = loaded.current.length - dumpTruckSensors.loadedCount
+        let rocks = 0
+        let steel = 0
+        let scrap = 0
+        for (const l of loaded.current) {
+          if (isRock(l.rock)) rocks++
+          else if (isScrap(l.rock)) {
+            scrap++
+            if (l.rock.kind === 'steel') steel++
+          }
+        }
+        dumpTruckSensors.loadedCount = rocks
+        dumpTruckSensors.loadedScrap = scrap
+        dumpTruckSensors.loadedSteel = steel
+        dumpTruckSensors.loadedLogs = loaded.current.length - rocks - scrap
       },
     }
     const list = listeners.current

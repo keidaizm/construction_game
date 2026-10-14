@@ -2,15 +2,18 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { colorKinds, ignoredCount, overColors, remainingOf, useMissionStore, type ColorCounts } from '../../stores/missionStore'
 import { useProgressStore } from '../../stores/progressStore'
-import { BREAKER_LEVEL, FELL_LEVEL, GRAPPLE_LEVEL, LEVELS, levelForStars, type MissionKind, type MissionPart } from '../../missions/levels'
+import { BREAKER_LEVEL, DEMOLISH_LEVEL, FELL_LEVEL, GRAPPLE_LEVEL, LEVELS, OFFICE_LEVEL, TOWER_LEVEL, levelForStars, type MissionKind, type MissionPart } from '../../missions/levels'
 import { ROCK_COLORS, ROCK_COLOR_ORDER, type RockColor } from '../../cargo/rocks/rockTypes'
 import { audio } from '../../audio/AudioManager'
 import { CraneBanner } from './CraneControls'
 import { useCelebrationStore } from '../../stores/celebrationStore'
 import { CRANE } from '../../vehicles/crane/craneConfig'
+import { SteelBanner, useSteelMode } from './SteelUI'
+import { CityBanner, useCityMode } from './CityUI'
+import { useScrapStore } from '../../stores/scrapStore'
 
 /** 岩の絵 1 個。color = 岩の色／filled = 運び終わった／over = 多すぎた分 */
-function RockIcon({ color = 'gray', filled, over = false }: { color?: RockColor; filled: boolean; over?: boolean }) {
+export function RockIcon({ color = 'gray', filled, over = false }: { color?: RockColor; filled: boolean; over?: boolean }) {
   const c = ROCK_COLORS[color]
   const fill = over ? '#ff8a80' : filled ? c.icon : 'rgba(255,255,255,0.6)'
   const stroke = over ? '#e53935' : filled ? c.outline : c.outline + '99'
@@ -171,7 +174,7 @@ function PartChip({ part, have }: { part: MissionPart; have: number }) {
  * ミッション表示の枠：左に「あと ◯こ」（多すぎたら「おおい ◯こ」）を大きく、右にお題と進み具合
  * （ユーザー要望：色が多いと上のまん中をとりすぎる。「あと ◯こ」は左に）
  */
-function MissionFrame({ rest, over, children }: { rest: number; over: number; children: ReactNode }) {
+export function MissionFrame({ rest, over, unit = 'こ', children }: { rest: number; over: number; unit?: string; children: ReactNode }) {
   return (
     <div className="mission mission--row" aria-live="polite">
       <div className={`mission__side${over > 0 ? ' is-over' : rest === 0 ? ' is-done' : ''}`}>
@@ -179,13 +182,13 @@ function MissionFrame({ rest, over, children }: { rest: number; over: number; ch
           <>
             <small>おおい</small>
             <b>{over}</b>
-            <small>こ</small>
+            <small>{unit}</small>
           </>
         ) : rest > 0 ? (
           <>
             <small>あと</small>
             <b>{rest}</b>
-            <small>こ</small>
+            <small>{unit}</small>
           </>
         ) : (
           <b>OK</b>
@@ -206,7 +209,13 @@ export function MissionBanner() {
   const { kind, parts, colorCounts, loads, target, delivered, startCount } = useMissionStore()
   // クレーンに乗っている間は、クレーンのミニゲームのお題を出す（CraneBanner）
   const onCrane = useGameStore((s) => s.activeVehicle === 'crane')
+  // Lv7：ビル・リサイクル場の近くや、がれきを運んでいる間は、てっこつ集めのお題を出す
+  const steelMode = useSteelMode()
+  // Lv8・9：工事現場の近くでは、ビル・タワーづくりの様子を出す
+  const cityMode = useCityMode()
   if (onCrane) return <CraneBanner />
+  if (steelMode) return <SteelBanner />
+  if (cityMode) return <CityBanner kind={cityMode} />
   if (kind === 'make') {
     const terms = equationTerms(kind, parts, colorCounts, loads)
     const oneColorOnly = delivered === target && colorKinds(colorCounts) < 2
@@ -366,7 +375,27 @@ function LevelUpCard({ level, onNext, label = 'つぎへ ▶' }: { level: number
     <Overlay confetti>
       <div className="levelup__title">グレードアップ！</div>
       <div className="levelup__badge">Lv{lv.level}</div>
-      {lv.level === GRAPPLE_LEVEL ? (
+      {lv.level === TOWER_LEVEL ? (
+        <div className="levelup__text">
+          こうじげんばに <b>タワー</b>を たてられるよ！
+          <br />
+          きいろい わに <b>いし</b>を 3こ おくと、<b>てっこつ</b> 2ほんで 1だん たつよ。6だんで できあがり（よるは ライトアップ）
+        </div>
+      ) : lv.level === OFFICE_LEVEL ? (
+        <div className="levelup__text">
+          ちずの みぎの <b>こうじげんば</b>で <b>ビル</b>を たてられるよ！
+          <br />
+          きいろい わに <b>いし</b>を 4こ おくと、もっている <b>てっこつ</b> 1ほんで 1かい たつよ。4かいで できあがり
+        </div>
+      ) : lv.level === DEMOLISH_LEVEL ? (
+        <div className="levelup__text">
+          ちずの したの ほうに <b>ふるい ビル</b> が でたよ！ <b>ブレーカー</b>で こわそう
+          <br />
+          でてきた がれきを <b>スケルトンバケット</b>で すくって、レバーで ゆらして ふるうと <b>てっこつ</b>に なるよ。
+          <br />
+          ダンプで <b>みどりの ばしょ</b>へ はこんで あつめよう
+        </div>
+      ) : lv.level === GRAPPLE_LEVEL ? (
         <div className="levelup__text">
           ショベルに <b>グラップル</b> が つけられるよ！
           <br />
@@ -423,8 +452,9 @@ export function LevelUpCelebration() {
   const shownLevel = useProgressStore((s) => s.shownLevel)
   const missionCleared = useMissionStore((s) => s.status === 'cleared')
   const mapCelebrating = useCelebrationStore((s) => s.mapComplete)
+  const steelCleared = useScrapStore((s) => s.cleared !== null)
   const level = levelForStars(stars).level
-  if (level <= shownLevel || missionCleared || mapCelebrating) return null
+  if (level <= shownLevel || missionCleared || mapCelebrating || steelCleared) return null
   return <LevelUpCard level={level} onNext={() => {}} label="やったね！" />
 }
 

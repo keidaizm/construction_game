@@ -21,10 +21,15 @@ import { logRegistry } from './cargo/logs/logRegistry'
 import { forest } from './world/forest'
 import { useHouseStore } from './stores/houseStore'
 import { boulderDirty, boulderStates } from './world/boulders'
+import { useInputStore } from './stores/inputStore'
+import { scrapRegistry } from './cargo/scrap/scrapRegistry'
+import { useScrapStore } from './stores/scrapStore'
+import { building } from './world/demolition'
+import { useCityStore } from './stores/cityStore'
 import { useCraftStore } from './stores/craftStore'
 
 // 開発時のみ：ブラウザのコンソールや自動テストから状態を確認できるようにする
-if (import.meta.env.DEV) Object.assign(window, { __game: { rockRegistry, excavatorSensors, dumpTruckSensors, bulldozerSensors, game: useGameStore, mission: useMissionStore, progress: useProgressStore, collection: useCollectionStore, dirt: dirtRegistry, exploration: useExplorationStore, teleport: requestTeleport, craneSensors, crane: useCraneStore, craneLoads, logs: logRegistry, forest, houses: useHouseStore, boulders: { states: boulderStates, dirty: boulderDirty }, craft: useCraftStore } })
+if (import.meta.env.DEV) Object.assign(window, { __game: { rockRegistry, excavatorSensors, dumpTruckSensors, bulldozerSensors, game: useGameStore, mission: useMissionStore, progress: useProgressStore, collection: useCollectionStore, dirt: dirtRegistry, exploration: useExplorationStore, teleport: requestTeleport, craneSensors, crane: useCraneStore, craneLoads, logs: logRegistry, forest, houses: useHouseStore, boulders: { states: boulderStates, dirty: boulderDirty }, craft: useCraftStore, input: useInputStore, scrap: scrapRegistry, scrapStore: useScrapStore, building, city: useCityStore } })
 
 // 長押しメニューやダブルタップ拡大で操作が途切れないようにする
 window.addEventListener('contextmenu', (e) => e.preventDefault())

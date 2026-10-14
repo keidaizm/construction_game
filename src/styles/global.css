@@ -864,7 +864,7 @@ body,
   }
 }
 
-/* ---------- ダンプの速さ切り替え（カメ／ウサギ） ---------- */
+/* ---------- アタッチメントの切り替え（いまのものが光る） ---------- */
 
 .gear-toggle {
   align-self: flex-end;
@@ -1008,7 +1008,7 @@ body,
   border-right: calc(var(--u) * 0.3) solid rgba(0, 0, 0, 0.15);
 }
 
-/* ジョイスティックの右に、速さの切り替え（カメ／ウサギ）を並べる */
+/* ジョイスティックの右に、アタッチメントの切り替えを並べる */
 .drive-zone {
   display: flex;
   align-items: flex-end;
@@ -2093,4 +2093,20 @@ body,
 
 .zukan__tab small {
   font-size: 0.8em;
+}
+
+/* ---------- てっこつ集め（Lv7） ---------- */
+
+.steel-slots .gem-icon {
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 5);
+}
+
+.term__dots.steel-dots {
+  grid-template-columns: repeat(4, calc(var(--u) * 4.6));
+}
+
+.steel-dots .gem-icon {
+  width: calc(var(--u) * 4.6);
+  height: calc(var(--u) * 4.6);
 }

@@ -35,6 +35,11 @@ export const LEVELS: readonly LevelConfig[] = [
   // Lv5：ブルドーザーで外がわの木を倒せる（木材が出る）／ Lv6：ショベルにグラップル（木材をつかんで運び、家を建てる）
   { level: 5, starsRequired: 44, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#2fbf5b', excavatorScale: 1.3 },
   { level: 6, starsRequired: 52, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#9b51e0', excavatorScale: 1.3 },
+  // Lv7：基地の南に古いビルが出る。ブレーカーでこわし、スケルトンバケットでふるって、てっこつを集める
+  { level: 7, starsRequired: 60, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#00a3a3', excavatorScale: 1.3 },
+  // Lv8：てっこつと石でビルを建てる／ Lv9：てっこつと石でタワー（東京タワーのような）を建てる
+  { level: 8, starsRequired: 68, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#2f80ed', excavatorScale: 1.3 },
+  { level: 9, starsRequired: 76, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#e8562a', excavatorScale: 1.3 },
 ]
 
 /** 油圧ブレーカーが使えるレベル */
@@ -45,6 +50,12 @@ export const BIG_TRUCK_LEVEL = 5
 export const FELL_LEVEL = 5
 /** グラップル（木材をつかむ）が使えるレベル。ここから木材は消えずに残る */
 export const GRAPPLE_LEVEL = 6
+/** 古いビルが出て、こわせるレベル（スケルトンバケット・てっこつ集め） */
+export const DEMOLISH_LEVEL = 7
+/** てっこつと石でビルを建てられるレベル */
+export const OFFICE_LEVEL = 8
+/** てっこつと石でタワーを建てられるレベル */
+export const TOWER_LEVEL = 9
 
 export function levelForStars(stars: number): LevelConfig {
   let result = LEVELS[0]

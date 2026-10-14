@@ -73,12 +73,11 @@ export function useDumpTruckController(
     const G = truckShape.current
     const throttle = shapeInput(input.driveY)
     const steerIn = shapeInput(input.driveX)
-    const gear = d.gears[useGameStore.getState().gears.dumpTruck]
-    const forwardMax = s.bed.angle > DUMP_TRUCK.cargo.attachBelowAngle ? d.bedUpMaxSpeed : gear.maxSpeed
+    const forwardMax = s.bed.angle > DUMP_TRUCK.cargo.attachBelowAngle ? d.bedUpMaxSpeed : d.maxSpeed
     const target = throttle >= 0 ? throttle * forwardMax : throttle * d.maxReverseSpeed
     // 逆方向への切り返しや、アクセルを戻したときはブレーキ（速めに減速）
     const braking = Math.sign(target) !== Math.sign(s.speed) || Math.abs(target) < Math.abs(s.speed)
-    s.speed = approach(s.speed, target, braking ? d.brakeResponse : gear.accelResponse, dt)
+    s.speed = approach(s.speed, target, braking ? d.brakeResponse : d.accelResponse, dt)
     // 速いほどハンドルの切れ角を小さく（速いときにクルッと回りすぎないように）
     const steerLimit = d.maxSteer * (1 - (1 - d.minSteerRatio) * Math.min(1, Math.abs(s.speed) / d.steerFadeSpeed))
     s.steer = approach(s.steer, -steerIn * steerLimit, d.steerResponse, dt) // + で左
@@ -136,7 +135,7 @@ export function useDumpTruckController(
     bedPaint.emissiveIntensity = approach(bedPaint.emissiveIntensity, Math.abs(bedIn) * 0.45, 10, dt)
     // 音は乗っているときだけ（乗っていない車両が上書きしないように）
     if (useGameStore.getState().activeVehicle === 'dumpTruck') {
-      audio.setEngine('dumpTruck', Math.min(1, Math.abs(throttle) * 0.35 + (Math.abs(s.speed) / d.gears.fast.maxSpeed) * 0.75 + Math.abs(bedIn) * 0.4))
+      audio.setEngine('dumpTruck', Math.min(1, Math.abs(throttle) * 0.35 + (Math.abs(s.speed) / d.maxSpeed) * 0.75 + Math.abs(bedIn) * 0.4))
       audio.setHydraulicLoad(Math.abs(bedIn) * 0.8)
       audio.setReversing(s.speed < -0.3)
     }

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { useLevel, useProgressStore } from '../../stores/progressStore'
 import { LEVELS, nextLevel } from '../../missions/levels'
@@ -10,6 +11,9 @@ const PERKS: Record<number, { icon: string; lines: string[] }> = {
   4: { icon: '🔨', lines: ['ゆあつ ブレーカーで おおきな いわを われる'] },
   5: { icon: '🚛', lines: ['ショベルと ダンプが おおきく なる', 'ブルドーザーで きを たおせる'] },
   6: { icon: '🏠', lines: ['グラップルで もくざいを つかめる', 'もくざいを はこんで いえを たてよう'] },
+  7: { icon: '🏚️', lines: ['ふるい ビルを ブレーカーで こわせる', 'スケルトンバケットで ふるって てっこつを あつめよう'] },
+  8: { icon: '🏢', lines: ['てっこつと いしで ビルを たてよう'] },
+  9: { icon: '🗼', lines: ['てっこつと いしで タワーを たてよう', 'よるは ライトアップ'] },
 }
 
 /** 左上のレベルの札（押すとレベルの一覧） */
@@ -38,6 +42,11 @@ export function LevelGuide() {
   const close = useGameStore((s) => s.toggleLevels)
   const stars = useProgressStore((s) => s.stars)
   const level = useLevel()
+  // レベルが増えて一覧がのびたので、開いたら いまのレベルの行が見えるところまで送る
+  const nowRow = useRef<HTMLLIElement>(null)
+  useEffect(() => {
+    if (open) nowRow.current?.scrollIntoView({ block: 'nearest' })
+  }, [open])
   if (!open) return null
   const next = nextLevel(level.level)
   const ratio = next ? Math.min(1, (stars - level.starsRequired) / (next.starsRequired - level.starsRequired)) : 1
@@ -66,7 +75,7 @@ export function LevelGuide() {
             const state = l.level < level.level ? 'done' : l.level === level.level ? 'now' : 'locked'
             const perk = PERKS[l.level]
             return (
-              <li key={l.level} className={`levels__row is-${state}`}>
+              <li key={l.level} ref={state === 'now' ? nowRow : undefined} className={`levels__row is-${state}`}>
                 <span className="levels__badge">Lv{l.level}</span>
                 <span className="levels__icon" aria-hidden>
                   {state === 'locked' ? '🔒' : perk.icon}

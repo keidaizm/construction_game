@@ -5,6 +5,7 @@ import type { RigListener } from '../shared/rig'
 import type { ExcavatorRigRefs } from './useExcavatorController'
 import { BUCKET_PROFILE, BUCKET_TIP, BUCKET_WIDTH, type YZ } from './bucketShape'
 import { EXCAVATOR } from './excavatorConfig'
+import type { ExcavatorTool } from '../../stores/gameStore'
 
 /** 側面図の 2 点を結ぶ角材の当たり判定（Beam の当たり判定版） */
 function BeamCollider({
@@ -66,8 +67,8 @@ export function ExcavatorColliders({
   listeners: RefObject<RigListener[]>
   /** レベルで大きくなったバケットの倍率（当たり判定もその大きさにする） */
   bucketScale: number
-  /** アタッチメント（ブレーカーなら細長い、グラップルなら本体だけの当たり判定） */
-  tool: 'bucket' | 'breaker' | 'grapple'
+  /** アタッチメント（ブレーカーなら細長い、グラップルなら本体だけの当たり判定。スケルトンバケットはバケットと同じ形） */
+  tool: ExcavatorTool
   /** ショベル全体の大きさ（Lv5 から 1.3）。本体・ブーム・アームの当たり判定にかける */
   machineScale: number
 }) {
@@ -129,7 +130,7 @@ export function ExcavatorColliders({
           <CuboidCollider args={[0.1, 0.1, 0.4]} position={[0, 0, 1.7]} friction={0.8} />
         </RigidBody>
       ) : (
-        <RigidBody key={bucketScale} ref={bucket} type="kinematicPosition" colliders={false}>
+        <RigidBody key={`${tool}-${bucketScale}`} ref={bucket} type="kinematicPosition" colliders={false}>
           {BUCKET_PROFILE.slice(1).map((p, i) => (
             <BeamCollider key={i} from={BUCKET_PROFILE[i]} to={p} halfWidth={BUCKET_WIDTH / 2 + 0.025} halfHeight={0.035} s={bucketScale} />
           ))}

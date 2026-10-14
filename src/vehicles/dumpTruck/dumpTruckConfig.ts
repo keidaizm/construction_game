@@ -12,15 +12,9 @@ export const DUMP_TRUCK = {
   start: { x: 4.6, z: 5.5, heading: 0 },
 
   drive: {
-    /**
-     * 2 段階の速さ（画面のカメ／ウサギのボタンで切り替え）
-     * - slow：ショベルの横に止めるなど、ゆっくり合わせたいとき
-     * - fast：広いところを走り回るとき（ふだんはこちら）
-     */
-    gears: {
-      slow: { maxSpeed: 5, accelResponse: 2.4 },
-      fast: { maxSpeed: 13, accelResponse: 1.8 },
-    },
+    /** 速さは 1 段階だけ（前はカメ／ウサギで切り替えたが、あまり使わないのでなくした＝ユーザー判断） */
+    maxSpeed: 13,
+    accelResponse: 1.8,
     maxReverseSpeed: 4,
     /** 荷台を上げている間の最高速度 */
     bedUpMaxSpeed: 1.5,

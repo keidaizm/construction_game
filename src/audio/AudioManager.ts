@@ -30,6 +30,10 @@ export type SoundId =
   | 'hammer'
   /** 大きな岩が割れた「ガラガラッ」 */
   | 'crack'
+  /** スケルトンバケットでふるう「ザラザラ」 */
+  | 'sift'
+  /** リサイクル場で鉄骨を 1 本数えた「カーン」 */
+  | 'clang'
 
 export interface AudioManager {
   play(id: SoundId): void
