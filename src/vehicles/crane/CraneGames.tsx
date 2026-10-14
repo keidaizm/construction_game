@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useRapier } from '@react-three/rapier'
 import * as THREE from 'three'
-import { useCraneStore } from '../../stores/craneStore'
+import { answerOf, useCraneStore } from '../../stores/craneStore'
 import { useGameStore } from '../../stores/gameStore'
 import { useProgressStore } from '../../stores/progressStore'
 import { useToastStore } from '../../stores/toastStore'
@@ -34,8 +34,8 @@ function stripeTexture() {
   return t
 }
 
-/** 看板の絵：式（2 + 3 = ？）。せいかいなら答えと ◎ */
-function drawSign(canvas: HTMLCanvasElement, a: number, b: number, answer: string, correct: boolean) {
+/** 看板の絵：式（2 + 3 = ？、45 − 12 = ？ など）。せいかいなら答え。2けたの式でも入るよう、文字の大きさを合わせる */
+function drawSign(canvas: HTMLCanvasElement, expression: string, answer: string, correct: boolean) {
   const ctx = canvas.getContext('2d')!
   ctx.fillStyle = correct ? '#e9ffe9' : '#ffffff'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -43,12 +43,21 @@ function drawSign(canvas: HTMLCanvasElement, a: number, b: number, answer: strin
   ctx.lineWidth = 16
   ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16)
   ctx.fillStyle = '#222222'
-  ctx.font = '900 120px sans-serif'
-  ctx.textAlign = 'center'
+  const left = `${expression} = `
+  let size = 120
+  ctx.font = `900 ${size}px sans-serif`
+  const room = canvas.width - 60
+  const width = () => ctx.measureText(left).width + ctx.measureText(answer).width
+  while (width() > room && size > 50) {
+    size -= 6
+    ctx.font = `900 ${size}px sans-serif`
+  }
+  ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
-  ctx.fillText(`${a} + ${b} = `, canvas.width * 0.42, canvas.height / 2 + 6)
+  const x = (canvas.width - width()) / 2
+  ctx.fillText(left, x, canvas.height / 2 + 6)
   ctx.fillStyle = correct ? '#2fbf5b' : '#e53935'
-  ctx.fillText(answer, canvas.width * 0.83, canvas.height / 2 + 6)
+  ctx.fillText(answer, x + ctx.measureText(left).width, canvas.height / 2 + 6)
 }
 
 /** ものさしの絵：1m ごとの目盛りと数字 */
@@ -132,7 +141,7 @@ export function CraneGames() {
   const feedback = useCraneStore((s) => s.feedback)
   useEffect(() => {
     const correct = feedback?.kind === 'correct'
-    drawSign(signCanvas, question.a, question.b, correct ? String(question.a + question.b) : '？', correct)
+    drawSign(signCanvas, `${question.a} ${question.op} ${question.b}`, correct ? String(answerOf(question)) : '？', correct)
     signTexture.needsUpdate = true
   }, [question, feedback, signCanvas, signTexture])
 
@@ -180,7 +189,7 @@ export function CraneGames() {
       } else if (onPadSince.current?.id !== on.id) {
         onPadSince.current = { id: on.id, at: clock.current }
       } else if (clock.current - onPadSince.current.at >= SETTLE && !store.feedback) {
-        const answer = store.question.a + store.question.b
+        const answer = answerOf(store.question)
         if (on.number === answer) {
           store.setFeedback({ kind: 'correct', number: on.number })
           useProgressStore.getState().addStars(1)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
-import { useCraneStore, type CraneGame } from '../../stores/craneStore'
+import { answerOf, useCraneStore, type CraneGame } from '../../stores/craneStore'
 import { useLevel } from '../../stores/progressStore'
 import { PART_COLORS } from '../../vehicles/shared/materials'
 import { CRANE } from '../../vehicles/crane/craneConfig'
@@ -117,7 +117,7 @@ export function CraneBanner() {
       {game === 'containers' ? (
         <>
           <div className="crane-banner__eq">
-            {question.a} + {question.b} = <b className={feedback?.kind === 'correct' ? 'is-correct' : ''}>{feedback?.kind === 'correct' ? question.a + question.b : '？'}</b>
+            {question.a} {question.op} {question.b} = <b className={feedback?.kind === 'correct' ? 'is-correct' : ''}>{feedback?.kind === 'correct' ? answerOf(question) : '？'}</b>
           </div>
           <div className="mission__title">
             {feedback?.kind === 'correct'
