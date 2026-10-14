@@ -30,7 +30,8 @@ function drawNumber(canvas: HTMLCanvasElement, color: string, n: number) {
   ctx.arc(w / 2, h / 2, s * 0.38, 0, Math.PI * 2)
   ctx.fill()
   ctx.fillStyle = '#222222'
-  ctx.font = `900 ${Math.round(s * 0.55)}px sans-serif`
+  // 2けたの数は少し小さく（白い丸からはみ出さないように）
+  ctx.font = `900 ${Math.round(s * (n >= 10 ? 0.42 : 0.55))}px sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(String(n), w / 2, h / 2 + s * 0.04)
