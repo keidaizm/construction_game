@@ -40,6 +40,8 @@ export const LEVELS: readonly LevelConfig[] = [
   // Lv8：てっこつと石でビルを建てる／ Lv9：てっこつと石でタワー（東京タワーのような）を建てる
   { level: 8, starsRequired: 68, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#2f80ed', excavatorScale: 1.3 },
   { level: 9, starsRequired: 76, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#e8562a', excavatorScale: 1.3 },
+  // Lv10：屋上のクレーンで鉄骨をつり上げて、ビルをどんどん高くする（クライミングクレーン）
+  { level: 10, starsRequired: 84, bucketScale: 1.6, bucketCapacity: 8, targetRange: [10, 20], colorRange: [2, 3], bucketAccent: '#ffc400', excavatorScale: 1.3 },
 ]
 
 /** 油圧ブレーカーが使えるレベル */
@@ -56,6 +58,8 @@ export const DEMOLISH_LEVEL = 7
 export const OFFICE_LEVEL = 8
 /** てっこつと石でタワーを建てられるレベル */
 export const TOWER_LEVEL = 9
+/** 屋上のクレーンで、ビルをどんどん高くできるレベル */
+export const SKYSCRAPER_LEVEL = 10
 
 export function levelForStars(stars: number): LevelConfig {
   let result = LEVELS[0]

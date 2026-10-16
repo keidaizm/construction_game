@@ -50,3 +50,29 @@ export const CITY_RING_RADIUS = 4.5
 export function nearCity(x: number, z: number, margin = 0) {
   return Math.hypot(x - CITY.x, z - CITY.z) < 32 + margin
 }
+
+/**
+ * 高くしていけるビル（Lv10）：屋上にタワークレーンがあり、地面の置き場の鉄骨をつり上げて屋上の黄色い枠に置くと、
+ * 1 階高くなってクレーンもせり上がる（実際の高層ビルのクライミングクレーン工法をまねた。ユーザー提案）。
+ * 工事現場の北のすみ（nearCity の中なので、木・岩・丘はもうない）
+ */
+export const SKYSCRAPER = { x: -66, z: 50, width: 9, depth: 9, floorHeight: 3.2, startFloors: 2, maxFloors: 30 }
+/** 1 階に使う鉄骨の本数（ユーザー判断：2〜3 本） */
+export const SKY_BEAMS_PER_FLOOR = 2
+/** 1 階高くなるともらえる星 */
+export const SKY_FLOOR_STARS = 1
+/** 鉄骨の置き場（地面。屋上のクレーンの腕が届く所） */
+export const SKY_STOCK = { x: -55, z: 52 }
+/** 地面に出しておく鉄骨の数（持っている てっこつの数まで） */
+export const SKY_STOCK_MAX = 4
+/** 鉄骨の大きさ（長い向きはローカル X） */
+export const SKY_BEAM_SIZE = [3, 0.45, 0.6] as const
+/**
+ * 屋上の枠：鉄骨を置く 2 か所（ビルの中心から Z へずらす。鉄骨は X 向き）。
+ * クレーンの塔は屋上のまん中にあり、トロリーは塔から 3.5m より近くへ来ないので、ふちの近くに置く
+ */
+export const SKY_SLOTS = [-3.7, 3.7] as const
+/** この距離 [m] まで車両で近づくと「クレーンに のる？」が出る */
+export const SKY_BOARD_RADIUS = 16
+/** 高いビルの屋上の高さ（階の数から） */
+export const skyRoofY = (floors: number) => 0.3 + floors * SKYSCRAPER.floorHeight

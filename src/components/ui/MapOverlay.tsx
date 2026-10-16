@@ -18,9 +18,9 @@ import { useLevel } from '../../stores/progressStore'
 import { DEMOLISH_LEVEL, GRAPPLE_LEVEL } from '../../missions/levels'
 import { BUILDING, DEMOLITION_SITE, RECYCLE_YARD } from '../../world/demolitionLayout'
 import { useBuildingStore } from '../../world/demolition'
-import { OFFICE, OFFICE_PLOTS, TOWER, TOWER_RING, TOWER_STAGES, CITY_RING_RADIUS, officeRing } from '../../world/cityLayout'
+import { OFFICE, OFFICE_PLOTS, TOWER, TOWER_RING, TOWER_STAGES, CITY_RING_RADIUS, SKYSCRAPER, officeRing } from '../../world/cityLayout'
 import { useCityStore } from '../../stores/cityStore'
-import { OFFICE_LEVEL, TOWER_LEVEL } from '../../missions/levels'
+import { OFFICE_LEVEL, SKYSCRAPER_LEVEL, TOWER_LEVEL } from '../../missions/levels'
 import { BRIDGE_WIDTH, BRIDGES, LAKES, RIVER, RIVER_WIDTH, bridgePose } from '../../world/waterLayout'
 import { ALL_MOUNDS } from '../../cargo/dirt/dirtConfig'
 import { excavatorSensors } from '../../vehicles/excavator/excavatorSensors'
@@ -307,6 +307,14 @@ export function MapOverlay() {
             )}
             {city.offices < OFFICE_PLOTS.length && (
               <circle cx={sx(officeRing(city.offices).x)} cy={sy(officeRing(city.offices).z)} r={CITY_RING_RADIUS} fill="rgba(255,212,0,0.35)" stroke="#e0b800" strokeWidth={1.5} strokeDasharray="3 2" />
+            )}
+            {levelNow >= SKYSCRAPER_LEVEL && (
+              <>
+                <rect x={sx(SKYSCRAPER.x) - SKYSCRAPER.width / 2} y={sy(SKYSCRAPER.z) - SKYSCRAPER.depth / 2} width={SKYSCRAPER.width} height={SKYSCRAPER.depth} fill="#8fb3d9" stroke="#2b4a66" strokeWidth={1} />
+                <text x={sx(SKYSCRAPER.x)} y={sy(SKYSCRAPER.z) + 5} fontSize={12} fontWeight="bold" textAnchor="middle" fill="#1f3550">
+                  {city.skyFloors}
+                </text>
+              </>
             )}
             {levelNow >= TOWER_LEVEL && (
               <>

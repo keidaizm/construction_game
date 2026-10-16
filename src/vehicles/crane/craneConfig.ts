@@ -30,3 +30,26 @@ export const CRANE = {
   /** フックの下がこれだけの範囲に荷物の上があれば、つかめる [m] */
   grabReach: { below: 0.35, above: 0.9 },
 } as const
+
+/**
+ * クレーンを置く場所。基地のクレーン（yard）と、Lv10 の高いビルの屋上のクレーン（sky）の 2 台があり、
+ * 同じ操作（useCraneController）で動かす。乗っている方（craneStore.site）だけが入力・カメラ・センサーを使う。
+ * base.y はクレーンの根元の高さ（屋上のクレーンはビルが高くなるとせり上がる）
+ */
+export type CraneSiteId = 'yard' | 'sky'
+
+export interface CraneSite {
+  id: CraneSiteId
+  x: number
+  z: number
+  /** 根元の高さ [m]（毎フレーム読む。屋上のクレーンは SkyscraperSite が書きかえる） */
+  base: { y: number }
+  /** フックを上げ下げする速さ [m/s]（屋上のクレーンはロープが長いので速く） */
+  ropeSpeed: number
+  /** カメラがフックの高さについていくか（屋上のクレーン）。しなければ、フックと地面の間 */
+  followHook: boolean
+  /** はなしたときに、そろえる先（あれば）。p は荷物の中心 */
+  snap?: (x: number, z: number) => { x: number; z: number; yaw: number } | null
+}
+
+export const YARD_CRANE: CraneSite = { id: 'yard', x: CRANE.x, z: CRANE.z, base: { y: 0 }, ropeSpeed: CRANE.rope.maxSpeed, followHook: false }

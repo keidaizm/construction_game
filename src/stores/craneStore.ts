@@ -2,14 +2,16 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { useProgressStore } from './progressStore'
 import { levelForStars } from '../missions/levels'
+import type { CraneSiteId } from '../vehicles/crane/craneConfig'
 
 /**
  * クレーンのミニゲームの状態。
- * - game：null = 乗ったばかりでえらぶ画面、'containers' = コンテナはこび、'tower' = つみきタワー
+ * - site：乗っているクレーン（'yard' = 基地、'sky' = Lv10 の高いビルの屋上）
+ * - game：null = 乗ったばかりでえらぶ画面、'containers' = コンテナはこび、'tower' = つみきタワー、'sky' = 屋上のクレーンでビルを高くする
  * - コンテナはこび：台の式（a + b など）に合う数字のコンテナを台にのせる
  * - つみきタワー：いまの高さと、さいこう記録（保存する）
  */
-export type CraneGame = 'containers' | 'tower'
+export type CraneGame = 'containers' | 'tower' | 'sky'
 
 /** 式の種類：たし算・ひき算・かけ算 */
 export type MathOp = '+' | '−' | '×'
@@ -23,6 +25,7 @@ export interface ContainerQuestion {
 }
 
 interface CraneState {
+  site: CraneSiteId
   game: CraneGame | null
   setGame: (game: CraneGame | null) => void
   /** つかむ／はなすボタンを押した回数（コントローラが増えたのを見て動く） */
@@ -148,6 +151,7 @@ export function makeQuestion(): ContainerQuestion {
 export const useCraneStore = create<CraneState>()(
   persist(
     (set) => ({
+      site: 'yard',
       game: null,
       setGame: (game) => set({ game, feedback: null }),
       grabPresses: 0,

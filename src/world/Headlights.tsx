@@ -64,7 +64,8 @@ export function Headlights() {
     const tz = m.z() + cos * (m.forward + m.reach)
     // ショベルは大きさ（Lv5 から 1.3 倍）に合わせて高く
     const mountHeight = m.height * (activeVehicle === 'excavator' ? excavatorSensors.scale : 1)
-    light.position.set(lx, heightAt(lx, lz) + mountHeight, lz)
+    // クレーンはトロリーの高さ（屋上のクレーンはビルといっしょに上がる）
+    light.position.set(lx, activeVehicle === 'crane' ? craneSensors.trolley.y - 0.4 : heightAt(lx, lz) + mountHeight, lz)
     target.position.set(tx, heightAt(tx, tz), tz)
   })
 

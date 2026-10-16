@@ -7,6 +7,12 @@ import { createJSONStorage, persist } from 'zustand/middleware'
  * - towerStage：できあがったタワーの段の数 / towerStones：いまの段に使った石の数
  */
 interface CityState {
+  /** 高いビル（Lv10）の階の数（はじめは 2 階） / いまの階に置いた鉄骨の数 */
+  skyFloors: number
+  skyBeams: number
+  addSkyBeam: () => void
+  /** 1 階高くなった */
+  buildSkyFloor: () => void
   offices: number
   officeFloors: number
   officeStones: number
@@ -48,6 +54,10 @@ const safeStorage = createJSONStorage(() => ({
 export const useCityStore = create<CityState>()(
   persist(
     (set, get) => ({
+      skyFloors: 2,
+      skyBeams: 0,
+      addSkyBeam: () => set({ skyBeams: get().skyBeams + 1 }),
+      buildSkyFloor: () => set({ skyFloors: get().skyFloors + 1, skyBeams: 0 }),
       offices: 0,
       officeFloors: 0,
       officeStones: 0,
@@ -65,7 +75,7 @@ export const useCityStore = create<CityState>()(
         return false
       },
       buildTowerStage: () => set({ towerStage: get().towerStage + 1, towerStones: 0 }),
-      resetCity: () => set({ offices: 0, officeFloors: 0, officeStones: 0, towerStage: 0, towerStones: 0 }),
+      resetCity: () => set({ skyFloors: 2, skyBeams: 0, offices: 0, officeFloors: 0, officeStones: 0, towerStage: 0, towerStones: 0 }),
     }),
     { name: 'kenki-asobi-city', storage: safeStorage },
   ),
