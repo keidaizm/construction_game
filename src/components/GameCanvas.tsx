@@ -35,7 +35,9 @@ import { Headlights } from '../world/Headlights'
 import { DemolitionSite } from '../world/DemolitionSite'
 import { ScrapField } from '../cargo/scrap/ScrapField'
 import { useLevel } from '../stores/progressStore'
-import { DEMOLISH_LEVEL, OFFICE_LEVEL } from '../missions/levels'
+import { DEMOLISH_LEVEL, OFFICE_LEVEL, SKYSCRAPER_LEVEL } from '../missions/levels'
+import { YARD_CRANE } from '../vehicles/crane/craneConfig'
+import { SkyscraperSite } from '../world/SkyscraperSite'
 import { CitySite } from '../world/CitySite'
 
 /** URL に ?physics を付けると当たり判定の形を表示する（開発用） */
@@ -82,7 +84,9 @@ function Scene() {
         <Excavator rootRef={excavator} />
         <DumpTruck rootRef={dumpTruck} />
         <Bulldozer rootRef={bulldozer} />
-        <Crane anchorRef={crane} />
+        <Crane anchorRef={crane} site={YARD_CRANE} />
+        {/* Lv10：高くしていけるビル（屋上のクレーン） */}
+        {level >= SKYSCRAPER_LEVEL && <SkyscraperSite anchorRef={crane} />}
         <CraneLoads />
         <LogField />
         {demolish && (
@@ -103,6 +107,8 @@ function Scene() {
       <DevRendererInfo />
       <DigEffects />
       <GoldBeacon />
+      {/* クレーンのカメラが追いかける点（乗っている方のクレーンが動かす） */}
+      <object3D ref={crane} />
       <FollowCamera targets={targets} />
     </>
   )

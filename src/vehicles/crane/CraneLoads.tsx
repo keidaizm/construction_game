@@ -37,7 +37,7 @@ function drawNumber(canvas: HTMLCanvasElement, color: string, n: number) {
   ctx.fillText(String(n), w / 2, h / 2 + s * 0.04)
 }
 
-function Load({ def, index }: { def: LoadDef; index: number }) {
+export function Load({ def, index }: { def: LoadDef; index: number }) {
   const body = useRef<RapierRigidBody>(null)
   const [w, h, d] = def.size
   const isContainer = def.game === 'containers'
@@ -124,6 +124,8 @@ function Load({ def, index }: { def: LoadDef; index: number }) {
 export function resetLoads(game: LoadDef['game'] | null, rapier: ReturnType<typeof useRapier>['rapier']) {
   for (const load of craneLoads.list) {
     if (game && load.game !== game) continue
+    // 屋上のクレーンの鉄骨は、ビルの工事の続き（SkyscraperSite が持つ）なので、はじめからでも動かさない
+    if (!game && load.game === 'sky') continue
     if (load.body.isKinematic()) continue
     load.body.setBodyType(rapier.RigidBodyType.Dynamic, true)
     load.body.setTranslation({ x: load.home.x, y: load.size[1] / 2 + 0.02, z: load.home.z }, true)

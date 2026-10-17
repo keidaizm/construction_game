@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { colorKinds, ignoredCount, overColors, remainingOf, useMissionStore, type ColorCounts } from '../../stores/missionStore'
 import { useProgressStore } from '../../stores/progressStore'
-import { BREAKER_LEVEL, DEMOLISH_LEVEL, FELL_LEVEL, GRAPPLE_LEVEL, LEVELS, OFFICE_LEVEL, TOWER_LEVEL, levelForStars, type MissionKind, type MissionPart } from '../../missions/levels'
+import { BREAKER_LEVEL, DEMOLISH_LEVEL, FELL_LEVEL, GRAPPLE_LEVEL, LEVELS, OFFICE_LEVEL, SKYSCRAPER_LEVEL, TOWER_LEVEL, levelForStars, type MissionKind, type MissionPart } from '../../missions/levels'
 import { ROCK_COLORS, ROCK_COLOR_ORDER, type RockColor } from '../../cargo/rocks/rockTypes'
 import { audio } from '../../audio/AudioManager'
 import { CraneBanner } from './CraneControls'
@@ -375,7 +375,13 @@ function LevelUpCard({ level, onNext, label = 'つぎへ ▶' }: { level: number
     <Overlay confetti>
       <div className="levelup__title">グレードアップ！</div>
       <div className="levelup__badge">Lv{lv.level}</div>
-      {lv.level === TOWER_LEVEL ? (
+      {lv.level === SKYSCRAPER_LEVEL ? (
+        <div className="levelup__text">
+          こうじげんばの きたに <b>たかく なる ビル</b>が できたよ！ ちかくで <b>おくじょうの クレーン</b>に のろう
+          <br />
+          じめんの <b>てっこつ</b>を つりあげて、おくじょうの きいろい わくに 2ほん おくと 1かい たかく なって、クレーンも のびるよ
+        </div>
+      ) : lv.level === TOWER_LEVEL ? (
         <div className="levelup__text">
           こうじげんばに <b>タワー</b>を たてられるよ！
           <br />

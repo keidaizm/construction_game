@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
-import { CRANE } from './craneConfig'
+import { CRANE, type CraneSite } from './craneConfig'
 import { MARKER_DOTS, useCraneController } from './useCraneController'
 
 const yellow = new THREE.MeshStandardMaterial({ color: '#f2b705', roughness: 0.6 })
@@ -56,20 +56,23 @@ function Lattice() {
  * └─ Slew（rotation.y：旋回）── 運転室・腕（ジブ）・うしろの腕とおもり
  *    └─ Trolley（position.z：フックを吊る台車）
  * ロープ・フック・真下の印は、揺れを付けるためワールドに直接置く（コントローラが位置を決める）。
+ * 基地（site = YARD_CRANE）と、Lv10 の高いビルの屋上（せり上がる）の 2 台がある。
+ * anchorRef：カメラが追いかける点（2 台で 1 つ。乗っている方のコントローラが動かす）
  */
-export function Crane({ anchorRef }: { anchorRef: RefObject<THREE.Object3D | null> }) {
+export function Crane({ anchorRef, site }: { anchorRef: RefObject<THREE.Object3D | null>; site: CraneSite }) {
+  const root = useRef<THREE.Group>(null)
   const slew = useRef<THREE.Group>(null)
   const trolley = useRef<THREE.Group>(null)
   const rope = useRef<THREE.Mesh>(null)
   const hook = useRef<THREE.Group>(null)
   const marker = useRef<THREE.Group>(null)
   const dots = useRef<THREE.InstancedMesh>(null)
-  const rig = useMemo(() => ({ slew, trolley, rope, hook, marker, dots, cameraAnchor: anchorRef }), [anchorRef])
-  useCraneController(rig)
+  const rig = useMemo(() => ({ root, slew, trolley, rope, hook, marker, dots, cameraAnchor: anchorRef }), [anchorRef])
+  useCraneController(rig, site)
 
   return (
     <>
-      <group position={[CRANE.x, 0, CRANE.z]}>
+      <group ref={root} position={[site.x, site.base.y, site.z]}>
         <mesh position-y={0.4} material={dark} receiveShadow>
           <boxGeometry args={[4, 0.8, 4]} />
         </mesh>
@@ -121,8 +124,6 @@ export function Crane({ anchorRef }: { anchorRef: RefObject<THREE.Object3D | nul
         </group>
       </group>
 
-      {/* カメラが追いかける点（コントローラが動かす） */}
-      <object3D ref={anchorRef} />
       {/* ロープ（高さ 1 の円柱をのばす）とフック */}
       <mesh ref={rope} material={ropeMat}>
         <cylinderGeometry args={[0.045, 0.045, 1, 6]} />

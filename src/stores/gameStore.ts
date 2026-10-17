@@ -3,6 +3,7 @@ import type { VehicleId } from '../vehicles/types'
 import { useInputStore } from './inputStore'
 import { audio } from '../audio/AudioManager'
 import { useCraneStore } from './craneStore'
+import type { CraneSiteId } from '../vehicles/crane/craneConfig'
 import { useProgressStore } from './progressStore'
 import { BREAKER_LEVEL, DEMOLISH_LEVEL, GRAPPLE_LEVEL, levelForStars } from '../missions/levels'
 
@@ -45,8 +46,8 @@ interface GameState {
   switchVehicle: () => void
   /** クレーンに乗る前に乗っていた車両（おりるとこれに戻る） */
   previousVehicle: VehicleId
-  /** クレーンに乗る（Lv3 から。近づくと出るボタン） */
-  boardCrane: () => void
+  /** クレーンに乗る（基地のクレーンは Lv3 から、屋上のクレーンは Lv10 から。近づくと出るボタン） */
+  boardCrane: (site?: CraneSiteId) => void
   /** クレーンからおりて、乗ってきた車両に戻る */
   leaveCrane: () => void
   /** ショベルの先のアタッチメント（Lv4 から油圧ブレーカーに付けかえられる） */
@@ -84,10 +85,12 @@ export const useGameStore = create<GameState>((set) => ({
     set((s) => (s.activeVehicle === 'crane' ? s : { activeVehicle: nextVehicle(s.activeVehicle) }))
   },
   previousVehicle: 'excavator',
-  boardCrane: () => {
+  boardCrane: (site = 'yard') => {
     useInputStore.getState().resetSource('touch')
     audio.play('switch')
-    useCraneStore.getState().setGame(null)
+    // 屋上のクレーンは、えらぶ画面なしで「ビルを高くする」
+    useCraneStore.setState({ site })
+    useCraneStore.getState().setGame(site === 'sky' ? 'sky' : null)
     set((s) => (s.activeVehicle === 'crane' ? s : { previousVehicle: s.activeVehicle, activeVehicle: 'crane' }))
   },
   leaveCrane: () => {

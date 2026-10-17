@@ -3,7 +3,12 @@ import { useGameStore } from '../../stores/gameStore'
 import { answerOf, useCraneStore, type CraneGame } from '../../stores/craneStore'
 import { useLevel } from '../../stores/progressStore'
 import { PART_COLORS } from '../../vehicles/shared/materials'
-import { CRANE } from '../../vehicles/crane/craneConfig'
+import { CRANE, type CraneSiteId } from '../../vehicles/crane/craneConfig'
+import { SKYSCRAPER, SKY_BEAMS_PER_FLOOR, SKY_BOARD_RADIUS } from '../../world/cityLayout'
+import { SKYSCRAPER_LEVEL } from '../../missions/levels'
+import { useCityStore } from '../../stores/cityStore'
+import { useScrapStore } from '../../stores/scrapStore'
+import { SteelBeamIcon } from './icons'
 import { excavatorSensors } from '../../vehicles/excavator/excavatorSensors'
 import { dumpTruckSensors } from '../../vehicles/dumpTruck/dumpTruckSensors'
 import { bulldozerSensors } from '../../vehicles/bulldozer/bulldozerSensors'
@@ -14,34 +19,36 @@ import { CraneIcon, CraneSidePictogram, CraneSlewPictogram, GrabIcon, LockIcon }
 const C = PART_COLORS
 const SENSORS = { excavator: excavatorSensors, dumpTruck: dumpTruckSensors, bulldozer: bulldozerSensors } as const
 
-/** 乗っている車両が、クレーンの近くにいるか（0.3 秒ごとに調べる） */
-function useNearCrane(vehicle: VehicleId) {
-  const [near, setNear] = useState(false)
+/** 乗っている車両が、どのクレーンの近くにいるか（基地／屋上。0.3 秒ごとに調べる） */
+function useNearCrane(vehicle: VehicleId): CraneSiteId | null {
+  const [near, setNear] = useState<CraneSiteId | null>(null)
   useEffect(() => {
     if (vehicle === 'crane') return
     const check = () => {
       const s = SENSORS[vehicle]
-      setNear(Math.hypot(s.x - CRANE.x, s.z - CRANE.z) < CRANE.boardRadius)
+      if (Math.hypot(s.x - CRANE.x, s.z - CRANE.z) < CRANE.boardRadius) setNear('yard')
+      else if (Math.hypot(s.x - SKYSCRAPER.x, s.z - SKYSCRAPER.z) < SKY_BOARD_RADIUS) setNear('sky')
+      else setNear(null)
     }
     check()
     const id = setInterval(check, 300)
     return () => clearInterval(id)
   }, [vehicle])
-  return vehicle !== 'crane' && near
+  return vehicle !== 'crane' ? near : null
 }
 
 /**
  * クレーンの近くに来ると出る「クレーンに のる？」ボタン（画面の下のまん中）。
- * Lv3 より前は鍵の絵と「Lv3 で のれるよ」（押せない）。
+ * 基地のクレーンは Lv3 から、高いビルの屋上のクレーンは Lv10 から（ビルは Lv10 から出るので、鍵は基地のクレーンだけ）。
  */
 export function CraneBoardPrompt({ vehicle }: { vehicle: VehicleId }) {
   const near = useNearCrane(vehicle)
   const level = useLevel()
   const board = useGameStore((s) => s.boardCrane)
-  if (!near) return null
-  const locked = level.level < CRANE.unlockLevel
+  if (!near || (near === 'sky' && level.level < SKYSCRAPER_LEVEL)) return null
+  const locked = near === 'yard' && level.level < CRANE.unlockLevel
   return (
-    <button type="button" className={`crane-board${locked ? ' is-locked' : ''}`} onClick={locked ? undefined : board} disabled={locked} aria-label="クレーンに のる">
+    <button type="button" className={`crane-board${locked ? ' is-locked' : ''}`} onClick={locked ? undefined : () => board(near)} disabled={locked} aria-label="クレーンに のる">
       <span className="crane-board__icon">
         <CraneIcon />
         {locked && (
@@ -50,7 +57,7 @@ export function CraneBoardPrompt({ vehicle }: { vehicle: VehicleId }) {
           </span>
         )}
       </span>
-      <span className="crane-board__text">{locked ? `Lv${CRANE.unlockLevel} で のれるよ` : 'クレーンに のる？'}</span>
+      <span className="crane-board__text">{locked ? `Lv${CRANE.unlockLevel} で のれるよ` : near === 'sky' ? 'おくじょうの クレーンに のる？' : 'クレーンに のる？'}</span>
     </button>
   )
 }
@@ -112,6 +119,7 @@ export function CraneBanner() {
   const best = useCraneStore((s) => s.towerBest)
   const setGame = useCraneStore((s) => s.setGame)
   if (!game) return null
+  if (game === 'sky') return <SkyBanner />
   return (
     <div className="mission crane-banner" aria-live="polite">
       {game === 'containers' ? (
@@ -140,6 +148,45 @@ export function CraneBanner() {
       <button type="button" className="crane-banner__change" onClick={() => setGame(null)}>
         あそびを かえる
       </button>
+    </div>
+  )
+}
+
+/** 屋上のクレーン（Lv10）のお題：いまの高さ・屋上に置いた鉄骨・持っている てっこつ */
+function SkyBanner() {
+  const floors = useCityStore((s) => s.skyFloors)
+  const placed = useCityStore((s) => s.skyBeams)
+  const steel = useScrapStore((s) => s.steel)
+  const done = floors >= SKYSCRAPER.maxFloors
+  return (
+    <div className="mission crane-banner" aria-live="polite">
+      <div className="crane-banner__eq">
+        <b>{floors}</b>かいだて
+      </div>
+      {done ? (
+        <div className="mission__title">いちばん たかく なった！</div>
+      ) : (
+        <>
+          <div className="mission__title">てっこつを つりあげて、おくじょうの きいろい わくに おこう！</div>
+          <div className="mission__progress">
+            <span className="mission__slots steel-slots">
+              {Array.from({ length: SKY_BEAMS_PER_FLOOR }, (_, i) => (
+                <SteelBeamIcon key={`${i}-${i < placed}`} faded={i >= placed} />
+              ))}
+            </span>
+            <span className="mission__count">
+              <b>{placed}</b> / {SKY_BEAMS_PER_FLOOR}
+            </span>
+          </div>
+          <div className="mission__sub">
+            {steel > 0 ? (
+              <span className="mission__note">もっている てっこつ {steel}ほん</span>
+            ) : (
+              <span className="mission__over">てっこつが ない！ ふるい ビルを こわして あつめよう</span>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

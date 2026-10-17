@@ -8,11 +8,13 @@ import { useCraneStore } from '../../stores/craneStore'
 import { shapeInput, clamp } from '../../controls/inputMath'
 import { audio } from '../../audio/AudioManager'
 import { approach } from '../shared/joint'
-import { CRANE } from './craneConfig'
+import { CRANE, type CraneSite } from './craneConfig'
 import { craneSensors } from './craneSensors'
 import { CONTAINER_PAD, TOWER_BASE, craneLoads, type LoadEntry } from './craneYard'
 
 export interface CraneRigRefs {
+  /** クレーン全体（根元の高さ base.y に合わせて上下する） */
+  root: RefObject<THREE.Group | null>
   slew: RefObject<THREE.Group | null>
   trolley: RefObject<THREE.Group | null>
   rope: RefObject<THREE.Mesh | null>
@@ -81,8 +83,9 @@ function halfHeight(load: LoadEntry) {
  * クレーンの操作。旋回（腕を回す）・トロリー（フックを吊る台車を前後）・巻き上げ（フックを上げ下げ）・つかむ／はなす。
  * フックは少しだけ振り子のように揺れる。つかんだ荷物はフックに追従させ（kinematic）、はなすと物理に戻す。
  * フック（と荷物）は地面や下の荷物より下へは下がらない（真下へ光線を飛ばして調べる）。
+ * site：どこのクレーンか（基地／屋上）。乗っている方だけが入力・カメラ・センサー・音を使う。
  */
-export function useCraneController(rig: CraneRigRefs) {
+export function useCraneController(rig: CraneRigRefs, site: CraneSite) {
   const { world, rapier } = useRapier()
   const state = useRef(createState())
   const axes = useRef(zeroAxes())
@@ -109,7 +112,9 @@ export function useCraneController(rig: CraneRigRefs) {
     if (!slew || !trolley || !rope || !hook) return
     const dt = Math.min(rawDt, 1 / 20)
     const s = state.current
-    const active = useGameStore.getState().activeVehicle === 'crane'
+    const active = useGameStore.getState().activeVehicle === 'crane' && useCraneStore.getState().site === site.id
+    const jibY = site.base.y + CRANE.jibY
+    if (rig.root.current) rig.root.current.position.y = site.base.y
     const input = readAxes(axes.current)
     if (!active) for (const k in input) input[k as keyof typeof input] = 0
 
@@ -125,7 +130,7 @@ export function useCraneController(rig: CraneRigRefs) {
       s.r = clamp(s.r, CRANE.trolley.min, CRANE.trolley.max)
       s.rVel = 0
     }
-    s.ropeVel = approach(s.ropeVel, -hoistIn * CRANE.rope.maxSpeed, CRANE.rope.response, dt) // 上げ = ロープを短く
+    s.ropeVel = approach(s.ropeVel, -hoistIn * site.ropeSpeed, CRANE.rope.response, dt) // 上げ = ロープを短く
     s.rope += s.ropeVel * dt
     if (s.rope < CRANE.rope.min) {
       s.rope = CRANE.rope.min
@@ -135,7 +140,7 @@ export function useCraneController(rig: CraneRigRefs) {
     // トロリーの位置と加速度（揺れのもと）
     const sin = Math.sin(s.yaw)
     const cos = Math.cos(s.yaw)
-    trolleyWorld.set(CRANE.x + sin * s.r, CRANE.jibY - 0.7, CRANE.z + cos * s.r)
+    trolleyWorld.set(site.x + sin * s.r, jibY - 0.7, site.z + cos * s.r)
     let ax = 0
     let az = 0
     if (s.lastTrolley && dt > 0) {
@@ -180,7 +185,7 @@ export function useCraneController(rig: CraneRigRefs) {
     } else {
       floor = floorBelow(ropeEnd.x, ropeEnd.y - CRANE.hookHeight + 0.3, ropeEnd.z)
     }
-    const maxRope = CRANE.jibY - 0.7 - CRANE.hookHeight - heldH - floor - 0.03
+    const maxRope = jibY - 0.7 - CRANE.hookHeight - heldH - floor - 0.03
     if (s.rope > maxRope) {
       s.rope = Math.max(CRANE.rope.min, maxRope)
       if (s.ropeVel > 0) s.ropeVel = 0
@@ -228,6 +233,8 @@ export function useCraneController(rig: CraneRigRefs) {
           const bp = below.body.translation()
           const bq = below.body.rotation()
           if (Math.hypot(bp.x - p.x, bp.z - p.z) < SNAP_DISTANCE) snap = { x: bp.x, z: bp.z, yaw: euler.setFromQuaternion(quat.set(bq.x, bq.y, bq.z, bq.w), 'YXZ').y }
+        } else if (site.snap) {
+          snap = site.snap(p.x, p.z)
         } else if (held.game === 'tower' && Math.hypot(TOWER_BASE.x - p.x, TOWER_BASE.z - p.z) < SNAP_PAD) {
           snap = { x: TOWER_BASE.x, z: TOWER_BASE.z, yaw: TOWER_BASE.yaw }
         } else if (held.game === 'containers' && Math.hypot(CONTAINER_PAD.x - p.x, CONTAINER_PAD.z - p.z) < SNAP_PAD) {
@@ -278,6 +285,13 @@ export function useCraneController(rig: CraneRigRefs) {
     hook.position.copy(ropeEnd)
     hook.rotation.set(0, s.yaw, 0)
 
+    // 乗っていないクレーンは、ここから先（印・カメラ・センサー・音）を使わない
+    if (!active) {
+      if (rig.marker.current) rig.marker.current.visible = false
+      if (rig.dots.current) rig.dots.current.visible = false
+      return
+    }
+
     // フックの真下の地面の印と点線（どこに下りるかが分かるように）
     const bottomY = hookTip.y - heldH
     const groundY = held ? floor : floorBelow(hookTip.x, hookTip.y + 0.05, hookTip.z)
@@ -302,7 +316,8 @@ export function useCraneController(rig: CraneRigRefs) {
     // カメラの注目点：トロリーの下、フックと地面の間（横から見て両方入るように）
     const anchor = rig.cameraAnchor.current
     if (anchor) {
-      anchor.position.set(trolleyWorld.x, clamp((hookTip.y + groundY) / 2, 3, 11), trolleyWorld.z)
+      // 屋上のクレーンはフックについていく（地面から屋上まで高いので、両方は入らない）
+      anchor.position.set(trolleyWorld.x, site.followHook ? Math.max(3, hookTip.y - 1.5) : clamp((hookTip.y + groundY) / 2, 3, 11), trolleyWorld.z)
       anchor.rotation.set(0, s.yaw, 0)
     }
 

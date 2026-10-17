@@ -1,4 +1,6 @@
 import { useGameStore, type ExcavatorTool, type TimeOfDay } from './gameStore'
+import { useCraneStore } from './craneStore'
+import type { CraneSiteId } from '../vehicles/crane/craneConfig'
 import { useMissionStore, type Load, type StarResult, type MissionStatus, type ColorCounts } from './missionStore'
 import type { MissionKind, MissionPart } from '../missions/levels'
 import type { VehicleId } from '../vehicles/types'
@@ -36,6 +38,8 @@ interface SessionSave {
     excavatorTool: ExcavatorTool
     timeOfDay: TimeOfDay
     headlights: boolean
+    /** クレーンに乗っていたら、どのクレーンか（なければ基地） */
+    craneSite?: CraneSiteId
   }
   mission: {
     kind: MissionKind
@@ -115,6 +119,7 @@ export function saveSession() {
       excavatorTool: g.excavatorTool,
       timeOfDay: g.timeOfDay,
       headlights: g.headlights,
+      craneSite: useCraneStore.getState().site,
     },
     mission: {
       kind: m.kind,
@@ -168,6 +173,8 @@ if (pendingSave) {
     timeOfDay: g.timeOfDay,
     headlights: g.headlights,
   })
+  // 屋上のクレーンに乗っていたら、屋上のクレーンにもどす
+  if (g.activeVehicle === 'crane' && g.craneSite === 'sky') useCraneStore.setState({ site: 'sky', game: 'sky' })
   dayNight.darkness = { day: 0, dusk: 0.5, night: 1 }[g.timeOfDay]
   useMissionStore.setState({ ...pendingSave.mission, pendingSince: 0 })
   rockRegistry.lastBatchId = pendingSave.lastBatchId
